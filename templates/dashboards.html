@@ -71,7 +71,13 @@
                 <div class="col-md-3">
                     <div class="stat-card">
                         <p class="text-muted small fw-bold text-uppercase mb-1">Revenue (KES)</p>
-                        <h3 class="fw-bold mb-0">{{ "{:,.2f}".format(total_revenue) }}</h3>
+                        <h3 class="fw-bold mb-0">
+                            {% if total_revenue %}
+                                {{ "{:,.2f}".format(total_revenue) }}
+                            {% else %}
+                                0.00
+                            {% endif %}
+                        </h3>
                     </div>
                 </div>
             </div>
@@ -123,7 +129,7 @@
                         <tr>
                             <td><span class="fw-bold text-primary">{{ p.seatingno }}</span></td>
                             <td>{{ p.fname }} {{ p.lname }}</td>
-                            <td>{{ p.bookingdate }}</td>
+                            <td>{{ p.bookingdate if p.bookingdate else 'N/A' }}</td>
                             <td><span class="badge bg-success">On Board</span></td>
                         </tr>
                         {% endfor %}
@@ -137,9 +143,6 @@
             <div class="table-container">
                 <h5 class="fw-bold mb-3">Nairobi Corridor: CBD ↔ KNH</h5>
                 <div id="leafletMap"></div>
-                <div class="mt-3 p-3 bg-light rounded border">
-                    <small class="text-muted"><i class="bi bi-info-circle me-1"></i> Showing active route for Bus #1. Map updates are simulated.</small>
-                </div>
             </div>
         </div>
 
@@ -159,11 +162,18 @@
                     <tbody>
                         {% for report in all_bookings %}
                         <tr>
-                            <td>{{ report.bookingdate }}</td>
+                            <td>{{ report.bookingdate if report.bookingdate else 'Recent' }}</td>
                             <td>{{ report.fname }} {{ report.lname }}</td>
                             <td><span class="badge bg-dark">{{ report.seatingno }}</span></td>
                             <td>#{{ report.busId }}</td>
-                            <td class="fw-bold text-success">KES {{ "{:,.2f}".format(report.amount_paid) }}</td>
+                            <td class="fw-bold text-success">
+                                KES 
+                                {% if report.amount_paid %}
+                                    {{ "{:,.2f}".format(report.amount_paid) }}
+                                {% else %}
+                                    0.00
+                                {% endif %}
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -209,41 +219,24 @@
 
     function initLeafletMap() {
         if (mapInitialized) return;
-        
-        // Nairobi Coordinates
         map = L.map('leafletMap').setView([-1.286389, 36.817223], 14);
-
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap'
-        }).addTo(map);
-
-        // Define Points
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
         const cbd = [-1.2858, 36.8235];
         const knh = [-1.3011, 36.8012];
-
         L.marker(cbd).addTo(map).bindPopup('CBD Terminal');
         L.marker(knh).addTo(map).bindPopup('KNH Stage');
-
         const routePoints = [cbd, [-1.2921, 36.8122], knh];
         L.polyline(routePoints, {color: 'black', weight: 4, dashArray: '10, 10'}).addTo(map);
-
         mapInitialized = true;
     }
 
     function showSection(sectionId) {
-        document.querySelectorAll('.content-section').forEach(section => {
-            section.classList.remove('active');
-        });
-        document.querySelectorAll('.nav-link').forEach(link => {
-            link.classList.remove('active');
-        });
-
+        document.querySelectorAll('.content-section').forEach(section => section.classList.remove('active'));
+        document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
         document.getElementById(sectionId).classList.add('active');
         document.getElementById('nav-' + sectionId).classList.add('active');
-
         if (sectionId === 'routes') {
             initLeafletMap();
-            // Force leaflet to recalculate size after being shown
             setTimeout(() => { map.invalidateSize(); }, 200);
         }
     }
