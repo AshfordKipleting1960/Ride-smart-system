@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ride Smart Admin - Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8f9fa; }
+        
+        .admin-wrapper { display: flex; min-height: 100vh; }
+
+        /* Left Side: Navigation Sidebar */
+        .sidebar {
+            width: 280px;
+            background: #000;
+            color: white;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar h4 { font-weight: 700; margin-bottom: 40px; letter-spacing: -1px; }
+
+        .nav-link {
+            color: rgba(255,255,255,0.7);
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            transition: 0.3s;
+            text-decoration: none;
+        }
+
+        .nav-link:hover, .nav-link.active { background: rgba(255,255,255,0.1); color: white; }
+
+        /* Right Side: Dashboard Content */
+        .main-content { flex: 1; padding: 40px; }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            border: 1.5px solid #eee;
+            transition: 0.3s;
+        }
+
+        .stat-card:hover { border-color: #000; transform: translateY(-5px); }
+
+        .table-container {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 30px;
+            border: 1.5px solid #eee;
+        }
+
+        .btn-black { background: #000; color: white; border-radius: 8px; padding: 10px 20px; }
+    </style>
+</head>
+<body>
+
+<div class="admin-wrapper">
+    <div class="sidebar">
+        <h4>Ride Smart Admin</h4>
+        <a href="#" class="nav-link active">Dashboard</a>
+        <a href="#" class="nav-link">Fleet Management</a>
+        <a href="#" class="nav-link">Routes & Fares</a>
+        <a href="#" class="nav-link">Booking Reports</a>
+        <div class="mt-auto">
+            <a href="/logout" class="nav-link text-danger">Sign Out</a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold">System Overview</h2>
+            <button class="btn btn-black">+ Add New Bus</button>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <p class="text-muted small fw-bold text-uppercase mb-1">Active Buses</p>
+                    <h3 class="fw-bold mb-0">24</h3>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <p class="text-muted small fw-bold text-uppercase mb-1">Total Bookings</p>
+                    <h3 class="fw-bold mb-0">1,204</h3>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <p class="text-muted small fw-bold text-uppercase mb-1">Revenue (KES)</p>
+                    <h3 class="fw-bold mb-0">450,000</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <h5 class="fw-bold mb-4">Recent Passenger Registrations</h5>
+            <table class="table align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>User ID</th>
+                        <th>Name</th>
+                        <th>Phone</th>
+                        <th>Role</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>#001</td>
+                        <td>Jane Wambui</td>
+                        <td>0712345678</td>
+                        <td><span class="badge bg-dark">Passenger</span></td>
+                        <td><button class="btn btn-sm btn-outline-dark">View</button></td>
+                    </tr>
+                    </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
