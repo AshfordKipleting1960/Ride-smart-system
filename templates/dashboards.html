@@ -113,8 +113,13 @@
 
         <div id="fleet" class="content-section">
             <h2 class="fw-bold mb-4">Fleet Management</h2>
-            <div class="table-container">
-                <h5 class="fw-bold mb-4">Passengers currently in Bus #1 (KCP 442L)</h5>
+            
+            {% for bus in all_buses %}
+            <div class="table-container mb-5">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold mb-0">Passengers in Bus #{{ bus.busId }} ({{ bus.plateno }})</h5>
+                    <span class="badge bg-dark">Active Bookings</span>
+                </div>
                 <table class="table align-middle">
                     <thead class="table-light">
                         <tr>
@@ -125,17 +130,28 @@
                         </tr>
                     </thead>
                     <tbody>
+                        {% set ns = namespace(found=false) %}
                         {% for p in bus_passengers %}
-                        <tr>
-                            <td><span class="fw-bold text-primary">{{ p.seatingno }}</span></td>
-                            <td>{{ p.fname }} {{ p.lname }}</td>
-                            <td>{{ p.bookingdate if p.bookingdate else 'N/A' }}</td>
-                            <td><span class="badge bg-success">On Board</span></td>
-                        </tr>
+                            {% if p.busId == bus.busId %}
+                                <tr>
+                                    <td><span class="fw-bold text-primary">{{ p.seatingno }}</span></td>
+                                    <td>{{ p.fname }} {{ p.lname }}</td>
+                                    <td>{{ p.bookingdate if p.bookingdate else 'N/A' }}</td>
+                                    <td><span class="badge bg-success">On Board</span></td>
+                                </tr>
+                                {% set ns.found = true %}
+                            {% endif %}
                         {% endfor %}
+
+                        {% if not ns.found %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-4">No passengers booked for this bus yet.</td>
+                        </tr>
+                        {% endif %}
                     </tbody>
                 </table>
             </div>
+            {% endfor %}
         </div>
 
         <div id="routes" class="content-section">

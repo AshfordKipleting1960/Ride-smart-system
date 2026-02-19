@@ -56,8 +56,8 @@ def main_page():
         cursor.execute("SELECT busId, plateno, totalcapacity FROM bus")
         buses = cursor.fetchall()
         
-        cursor.execute("SELECT userId, busId, seatingno, ticket_ref, amount_paid FROM booking")
-        bookings = cursor.fetchall()
+        cursor.execute("SELECT bookingId, userId, busId, seatingno, ticket_ref, amount_paid FROM booking")
+        bookings_list = cursor.fetchall()
         
         cursor.close()
         db.close()
@@ -65,7 +65,7 @@ def main_page():
         return render_template('mainpage.html', 
                                user_name=session['user_name'], 
                                buses=buses, 
-                               bookings=bookings)
+                               bookings=bookings_list)
     except Exception as e:
         return f"Database Error: {e}"
 
@@ -78,59 +78,121 @@ def admin_dashboard():
         db = get_db()
         cursor = db.cursor(dictionary=True)
 
-        # 1. Stats for the cards
+        # 1. Stats Calculation
         cursor.execute("SELECT COUNT(*) as total FROM bus")
         bus_count = cursor.fetchone()['total']
-
+        
         cursor.execute("SELECT COUNT(*) as total FROM booking")
         booking_count = cursor.fetchone()['total']
-
+        
         cursor.execute("SELECT COUNT(*) as total FROM users")
         passenger_count = cursor.fetchone()['total']
-
+        
         cursor.execute("SELECT SUM(amount_paid) as total FROM booking")
         rev_res = cursor.fetchone()
         total_revenue = rev_res['total'] if rev_res['total'] else 0.0
 
-        # 2. Passenger Registrations Table (Overview Section)
-        # Using fetchall() and converting to list of tuples for your HTML indexing user[0], user[1]
+        # 2. Passenger Registrations (for Overview Tab)
         cursor.execute("SELECT userId, fname, lname, phone_number FROM users")
         passengers_raw = cursor.fetchall()
+        # Formatting as tuple list for your specific table logic
         passengers = [tuple(p.values()) for p in passengers_raw]
 
-        # 3. Fleet Management Section (Bus #1)
+        # 3. Dynamic Fleet Data (Fetching ALL buses and ALL active bookings)
+        cursor.execute("SELECT busId, plateno FROM bus")
+        all_buses = cursor.fetchall()
+
         cursor.execute("""
-            SELECT b.seatingno, u.fname, u.lname, b.bookingdate 
+            SELECT b.bookingId, b.seatingno, u.fname, u.lname, b.bookingdate, b.busId 
             FROM booking b
             JOIN users u ON b.userId = u.userId
-            WHERE b.busId = 1
         """)
         bus_passengers = cursor.fetchall()
 
-        # 4. Booking Reports Section
-        sql = """
-            SELECT b.bookingdate, u.fname, u.lname, b.seatingno, b.busId, b.amount_paid 
+        # 4. Reports (for Booking Reports Tab)
+        cursor.execute("""
+            SELECT b.bookingId, b.bookingdate, u.fname, u.lname, b.seatingno, b.busId, b.amount_paid 
             FROM booking b
             JOIN users u ON b.userId = u.userId
             ORDER BY b.bookingdate DESC
-        """
-        cursor.execute(sql)
+        """)
         all_bookings = cursor.fetchall()
 
         cursor.close()
         db.close()
         
-        # We must pass ALL these variables because your HTML template uses them
         return render_template('dashboards.html', 
                                bus_count=bus_count,
                                booking_count=booking_count,
                                passenger_count=passenger_count,
                                total_revenue=total_revenue,
                                passengers=passengers,
+                               all_buses=all_buses,
                                bus_passengers=bus_passengers,
                                all_bookings=all_bookings)
     except Exception as e:
         return f"Admin Dashboard Error: {e}"
+
+@app.route('/add_user', methods=['POST'])
+def add_user():
+    if 'user_id' not in session or session['user_id'] != 'ADMIN':
+        return redirect(url_for('index'))
+    
+    fname = request.form.get('fname')
+    lname = request.form.get('lname')
+    phone = request.form.get('phone_number')
+    email = request.form.get('email')
+    gender = request.form.get('gender')
+    pin = request.form.get('user_pin')
+
+    try:
+        db = get_db()
+        cursor = db.cursor()
+        sql = "INSERT INTO users (fname, lname, phone_number, email, gender, user_pin) VALUES (%s, %s, %s, %s, %s, %s)"
+        cursor.execute(sql, (fname, lname, phone, email, gender, pin))
+        db.commit()
+        cursor.close()
+        db.close()
+        return redirect(url_for('admin_dashboard'))
+    except Exception as e:
+        return f"Error adding user: {e}"
+
+@app.route('/delete_user/<int:user_id>')
+def delete_user(user_id):
+    if 'user_id' not in session or session['user_id'] != 'ADMIN':
+        return redirect(url_for('index'))
+    try:
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute("DELETE FROM users WHERE userId = %s", (user_id,))
+        db.commit()
+        cursor.close()
+        db.close()
+        return redirect(url_for('admin_dashboard'))
+    except Exception as e:
+        return f"Error deleting user: {e}"
+
+@app.route('/cancel_booking/<int:booking_id>')
+def cancel_booking(booking_id):
+    if 'user_id' not in session:
+        return redirect(url_for('index'))
+    
+    try:
+        db = get_db()
+        cursor = db.cursor()
+        if session['user_id'] == 'ADMIN':
+            cursor.execute("DELETE FROM booking WHERE bookingId = %s", (booking_id,))
+        else:
+            cursor.execute("DELETE FROM booking WHERE bookingId = %s AND userId = %s", (booking_id, session['user_id']))
+        db.commit()
+        cursor.close()
+        db.close()
+
+        if session['user_id'] == 'ADMIN':
+            return redirect(url_for('admin_dashboard'))
+        return redirect(url_for('main_page'))
+    except Exception as e:
+        return f"Cancellation Error: {e}"
 
 @app.route('/process_booking', methods=['POST'])
 def process_booking():
