@@ -11,6 +11,9 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8f9fa; }
         .admin-wrapper { display: flex; min-height: 100vh; }
@@ -26,6 +29,12 @@
         .content-section { display: none; }
         .content-section.active { display: block; }
         #leafletMap { height: 500px; width: 100%; border-radius: 15px; z-index: 1; }
+        
+        .route-info-panel { background: #fdfdfd; border-radius: 12px; padding: 20px; border-left: 4px solid #000; }
+        .bus-tag { background: #eee; padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; display: inline-block; margin-right: 5px; }
+
+        /* Hide Routing Control Instructions to keep map clean */
+        .leaflet-routing-container { display: none; }
     </style>
 </head>
 <body>
@@ -113,7 +122,6 @@
 
         <div id="fleet" class="content-section">
             <h2 class="fw-bold mb-4">Fleet Management</h2>
-            
             {% for bus in all_buses %}
             <div class="table-container mb-5">
                 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -142,7 +150,6 @@
                                 {% set ns.found = true %}
                             {% endif %}
                         {% endfor %}
-
                         {% if not ns.found %}
                         <tr>
                             <td colspan="4" class="text-center text-muted py-4">No passengers booked for this bus yet.</td>
@@ -156,9 +163,39 @@
 
         <div id="routes" class="content-section">
             <h2 class="fw-bold mb-4">Live Routes & Tracking</h2>
-            <div class="table-container">
-                <h5 class="fw-bold mb-3">Nairobi Corridor: CBD ↔ KNH</h5>
-                <div id="leafletMap"></div>
+            <div class="row g-4">
+                <div class="col-lg-8">
+                    <div class="table-container">
+                        <h5 class="fw-bold mb-3">Nairobi Corridor: CBD ↔ KNH</h5>
+                        <div id="leafletMap"></div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="table-container h-100">
+                        <h5 class="fw-bold mb-4">Route Details</h5>
+                        <div class="route-info-panel mb-4">
+                            <p class="text-muted small fw-bold text-uppercase mb-2">Assigned Fleet</p>
+                            <div class="d-flex flex-wrap gap-2">
+                                {% if all_buses %}
+                                    {% for bus in all_buses %}
+                                        <span class="bus-tag"><i class="bi bi-bus-front me-1"></i>{{ bus.plateno }}</span>
+                                    {% endfor %}
+                                {% else %}
+                                    <span class="text-muted small">No buses assigned</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="route-info-panel">
+                            <p class="text-muted small fw-bold text-uppercase mb-2">Key Stops</p>
+                            <ul class="list-unstyled mb-0">
+                                <li class="mb-2"><i class="bi bi-geo-alt-fill text-danger me-2"></i>CBD Terminal</li>
+                                <li class="mb-2"><i class="bi bi-record-circle me-2"></i>Valley Road</li>
+                                <li class="mb-2"><i class="bi bi-record-circle me-2"></i>Ngong Road</li>
+                                <li><i class="bi bi-geo-alt-fill text-success me-2"></i>KNH Stage</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -235,14 +272,34 @@
 
     function initLeafletMap() {
         if (mapInitialized) return;
-        map = L.map('leafletMap').setView([-1.286389, 36.817223], 14);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-        const cbd = [-1.2858, 36.8235];
-        const knh = [-1.3011, 36.8012];
-        L.marker(cbd).addTo(map).bindPopup('CBD Terminal');
-        L.marker(knh).addTo(map).bindPopup('KNH Stage');
-        const routePoints = [cbd, [-1.2921, 36.8122], knh];
-        L.polyline(routePoints, {color: 'black', weight: 4, dashArray: '10, 10'}).addTo(map);
+        
+        map = L.map('leafletMap').setView([-1.294, 36.812], 14);
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Coordinates for the route
+        const cbd = L.latLng(-1.2858, 36.8235);
+        const knh = L.latLng(-1.3011, 36.8012);
+
+        // Using Leaflet Routing Machine to snap to REAL roads
+        L.Routing.control({
+            waypoints: [cbd, knh],
+            routeWhileDragging: false,
+            addWaypoints: false,
+            draggableWaypoints: false,
+            fitSelectedRoutes: true,
+            lineOptions: {
+                styles: [{ color: 'black', opacity: 0.8, weight: 6 }]
+            },
+            createMarker: function(i, wp, n) {
+                // Personalize the markers (0 is Start, 1 is End)
+                const markerText = (i === 0) ? "CBD Terminal" : "KNH Stage";
+                return L.marker(wp.latLng).bindPopup(markerText);
+            }
+        }).addTo(map);
+
         mapInitialized = true;
     }
 
