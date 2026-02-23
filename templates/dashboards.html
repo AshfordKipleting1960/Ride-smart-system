@@ -33,7 +33,6 @@
         .route-info-panel { background: #fdfdfd; border-radius: 12px; padding: 20px; border-left: 4px solid #000; }
         .bus-tag { background: #eee; padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; display: inline-block; margin-right: 5px; }
 
-        /* Hide Routing Control Instructions to keep map clean */
         .leaflet-routing-container { display: none; }
     </style>
 </head>
@@ -121,12 +120,37 @@
         </div>
 
         <div id="fleet" class="content-section">
-            <h2 class="fw-bold mb-4">Fleet Management</h2>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold">Fleet Management</h2>
+                <button class="btn btn-black" data-bs-toggle="modal" data-bs-target="#addBusModal">+ Add New Bus</button>
+            </div>
+
             {% for bus in all_buses %}
             <div class="table-container mb-5">
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="fw-bold mb-0">Passengers in Bus #{{ bus.busId }} ({{ bus.plateno }})</h5>
-                    <span class="badge bg-dark">Active Bookings</span>
+                    <div>
+                        <h5 class="fw-bold mb-0">Bus #{{ bus.busId }} ({{ bus.plateno }})</h5>
+                        <small class="text-muted">Total Capacity: {{ bus.totalcapacity }} seats</small>
+                        <div class="mt-1">
+                            {# Logical check to determine bus status based on passenger count #}
+                            {% set active_p = [] %}
+                            {% for p in bus_passengers %}{% if p.busId == bus.busId %}{% set _ = active_p.append(p) %}{% endif %}{% endfor %}
+                            
+                            {% if active_p|length > 0 %}
+                                <span class="badge bg-primary">In Transit</span>
+                            {% else %}
+                                <span class="badge bg-secondary">At Terminal (Empty)</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="/finish_trip/{{ bus.busId }}" class="btn btn-sm btn-success" onclick="return confirm('Clear all bookings for this bus?')">
+                            <i class="bi bi-check-circle me-1"></i> Arrived
+                        </a>
+                        <a href="/delete_bus/{{ bus.busId }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete bus from fleet?')">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </div>
                 </div>
                 <table class="table align-middle">
                     <thead class="table-light">
@@ -138,22 +162,19 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% set ns = namespace(found=false) %}
-                        {% for p in bus_passengers %}
-                            {% if p.busId == bus.busId %}
+                        {% if active_p|length > 0 %}
+                            {% for p in active_p %}
                                 <tr>
                                     <td><span class="fw-bold text-primary">{{ p.seatingno }}</span></td>
                                     <td>{{ p.fname }} {{ p.lname }}</td>
                                     <td>{{ p.bookingdate if p.bookingdate else 'N/A' }}</td>
                                     <td><span class="badge bg-success">On Board</span></td>
                                 </tr>
-                                {% set ns.found = true %}
-                            {% endif %}
-                        {% endfor %}
-                        {% if not ns.found %}
-                        <tr>
-                            <td colspan="4" class="text-center text-muted py-4">No passengers booked for this bus yet.</td>
-                        </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-4">No active passengers on this bus.</td>
+                            </tr>
                         {% endif %}
                     </tbody>
                 </table>
@@ -236,6 +257,32 @@
     </div>
 </div>
 
+<div class="modal fade" id="addBusModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content" style="border-radius: 15px;">
+            <div class="modal-header">
+                <h5 class="fw-bold">Register New Bus</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="/add_bus" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="small fw-bold">Plate Number</label>
+                        <input type="text" name="plateno" class="form-control" placeholder="KDD 123X" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="small fw-bold">Seating Capacity</label>
+                        <input type="number" name="capacity" class="form-control" value="14" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-black w-100">Save to Fleet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="addUserModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content" style="border-radius: 15px;">
@@ -279,11 +326,9 @@
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
 
-        // Coordinates for the route
         const cbd = L.latLng(-1.2858, 36.8235);
         const knh = L.latLng(-1.3011, 36.8012);
 
-        // Using Leaflet Routing Machine to snap to REAL roads
         L.Routing.control({
             waypoints: [cbd, knh],
             routeWhileDragging: false,
@@ -294,7 +339,6 @@
                 styles: [{ color: 'black', opacity: 0.8, weight: 6 }]
             },
             createMarker: function(i, wp, n) {
-                // Personalize the markers (0 is Start, 1 is End)
                 const markerText = (i === 0) ? "CBD Terminal" : "KNH Stage";
                 return L.marker(wp.latLng).bindPopup(markerText);
             }

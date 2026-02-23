@@ -58,9 +58,11 @@ def main_page():
     try:
         db = get_db()
         cursor = db.cursor(dictionary=True)
+        # Ensure totalcapacity is selected (You already have this)
         cursor.execute("SELECT busId, plateno, totalcapacity FROM bus")
         buses = cursor.fetchall()
         
+        # Modified to ensure only active bookings show on main page seat maps
         cursor.execute("""
             SELECT bookingId, userId, busId, seatingno, ticket_ref, amount_paid 
             FROM booking WHERE status = 'Active' OR status IS NULL
@@ -101,9 +103,10 @@ def admin_dashboard():
         passengers = [tuple(p.values()) for p in passengers_raw]
 
         # 3. Dynamic Fleet Data
-        cursor.execute("SELECT busId, plateno FROM bus")
+        cursor.execute("SELECT busId, plateno, totalcapacity FROM bus")
         all_buses = cursor.fetchall()
 
+        # FETCH ONLY ACTIVE PASSENGERS FOR THE FLEET VIEW
         cursor.execute("""
             SELECT b.bookingId, b.seatingno, u.fname, u.lname, b.bookingdate, b.busId 
             FROM booking b
@@ -135,7 +138,57 @@ def admin_dashboard():
     except Exception as e:
         return f"Admin Dashboard Error: {e}"
 
-# --- NEW: CANCEL BOOKING ROUTE ---
+# --- ADD NEW BUS ---
+@app.route('/add_bus', methods=['POST'])
+def add_bus():
+    if 'user_id' not in session or session['user_id'] != 'ADMIN':
+        return redirect(url_for('index'))
+    
+    plateno = request.form.get('plateno')
+    capacity = request.form.get('capacity')
+
+    try:
+        db = get_db()
+        cursor = db.cursor()
+        sql = "INSERT INTO bus (plateno, totalcapacity) VALUES (%s, %s)"
+        cursor.execute(sql, (plateno, capacity))
+        db.commit()
+        cursor.close(); db.close()
+        return redirect(url_for('admin_dashboard'))
+    except Exception as e:
+        return f"Error adding bus: {e}"
+
+# --- DELETE BUS ---
+@app.route('/delete_bus/<int:bus_id>')
+def delete_bus(bus_id):
+    if 'user_id' not in session or session['user_id'] != 'ADMIN':
+        return redirect(url_for('index'))
+    try:
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute("DELETE FROM booking WHERE busId = %s", (bus_id,))
+        cursor.execute("DELETE FROM bus WHERE busId = %s", (bus_id,))
+        db.commit()
+        cursor.close(); db.close()
+        return redirect(url_for('admin_dashboard'))
+    except Exception as e:
+        return f"Error deleting bus: {e}"
+
+# --- FINISH TRIP (RESET BUS SEATS) ---
+@app.route('/finish_trip/<int:bus_id>')
+def finish_trip(bus_id):
+    if 'user_id' not in session or session['user_id'] != 'ADMIN':
+        return redirect(url_for('index'))
+    try:
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute("UPDATE booking SET status = 'Completed' WHERE busId = %s AND (status = 'Active' OR status IS NULL)", (bus_id,))
+        db.commit()
+        cursor.close(); db.close()
+        return redirect(url_for('admin_dashboard'))
+    except Exception as e:
+        return f"Error finishing trip: {e}"
+
 @app.route('/cancel_booking/<int:booking_id>')
 def cancel_booking(booking_id):
     if 'user_id' not in session:
@@ -143,7 +196,6 @@ def cancel_booking(booking_id):
     try:
         db = get_db()
         cursor = db.cursor()
-        # We delete the booking record entirely or update status to 'Cancelled'
         cursor.execute("DELETE FROM booking WHERE bookingId = %s", (booking_id,))
         db.commit()
         cursor.close(); db.close()
@@ -151,7 +203,6 @@ def cancel_booking(booking_id):
     except Exception as e:
         return f"Cancellation Error: {e}"
 
-# --- DELETE USER ROUTE ---
 @app.route('/delete_user/<int:user_id>')
 def delete_user(user_id):
     if 'user_id' not in session or session['user_id'] != 'ADMIN':
