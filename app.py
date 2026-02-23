@@ -35,19 +35,16 @@ def login():
     try:
         db = get_db()
         cursor = db.cursor(dictionary=True)
-        # We only fetch the record by phone number first
         cursor.execute("SELECT userId, fname, user_pin FROM users WHERE phone_number = %s", (phone,))
         user = cursor.fetchone()
         cursor.close()
         db.close()
 
-        # check_password_hash compares the typed 'pin' with the 'hashed pin' in the DB
         if user and check_password_hash(user['user_pin'], pin):
             session['user_id'] = user['userId']
             session['user_name'] = user['fname']
             return redirect(url_for('main_page'))
         
-        # MODIFIED: Instead of returning a string, we pass the error to the template
         return render_template('BusSeatReservationSystem(vs).html', error="Invalid phone number or PIN")
         
     except Exception as e:
@@ -64,20 +61,14 @@ def main_page():
         cursor.execute("SELECT busId, plateno, totalcapacity FROM bus")
         buses = cursor.fetchall()
         
-        # Structure Preserved: Fetching bookings for the map
         cursor.execute("""
             SELECT bookingId, userId, busId, seatingno, ticket_ref, amount_paid 
             FROM booking WHERE status = 'Active' OR status IS NULL
         """)
         bookings_list = cursor.fetchall()
         
-        cursor.close()
-        db.close()
-        
-        return render_template('mainpage.html', 
-                               user_name=session['user_name'], 
-                               buses=buses, 
-                               bookings=bookings_list)
+        cursor.close(); db.close()
+        return render_template('mainpage.html', user_name=session['user_name'], buses=buses, bookings=bookings_list)
     except Exception as e:
         return f"Database Error: {e}"
 
@@ -104,7 +95,7 @@ def admin_dashboard():
         rev_res = cursor.fetchone()
         total_revenue = rev_res['total'] if rev_res['total'] else 0.0
 
-        # 2. Passenger Registrations
+        # 2. Passenger Registrations (Passing as tuples to match your HTML loop)
         cursor.execute("SELECT userId, fname, lname, phone_number FROM users")
         passengers_raw = cursor.fetchall()
         passengers = [tuple(p.values()) for p in passengers_raw]
@@ -121,27 +112,16 @@ def admin_dashboard():
         """)
         bus_passengers = cursor.fetchall()
 
-        # 4. Reports (Logic for the "Booking Reports" tab)
+        # 4. Reports (Logic for the "Booking Reports" tab - Unified for your template)
         cursor.execute("""
-            SELECT b.bookingId, b.bookingdate, u.fname, u.lname, b.seatingno, b.busId, b.amount_paid 
+            SELECT b.bookingdate, u.fname, u.lname, b.seatingno, b.busId, b.amount_paid 
             FROM booking b
             JOIN users u ON b.userId = u.userId
-            WHERE b.status = 'Active' OR b.status IS NULL
             ORDER BY b.bookingdate DESC
         """)
-        active_bookings = cursor.fetchall()
+        all_bookings = cursor.fetchall()
 
-        cursor.execute("""
-            SELECT b.bookingId, b.bookingdate, u.fname, u.lname, b.seatingno, b.busId, b.amount_paid 
-            FROM booking b
-            JOIN users u ON b.userId = u.userId
-            WHERE b.status = 'Completed'
-            ORDER BY b.bookingdate DESC
-        """)
-        completed_history = cursor.fetchall()
-
-        cursor.close()
-        db.close()
+        cursor.close(); db.close()
         
         return render_template('dashboards.html', 
                                bus_count=bus_count,
@@ -151,10 +131,27 @@ def admin_dashboard():
                                passengers=passengers,
                                all_buses=all_buses,
                                bus_passengers=bus_passengers,
-                               active_bookings=active_bookings,
-                               completed_history=completed_history)
+                               all_bookings=all_bookings)
     except Exception as e:
         return f"Admin Dashboard Error: {e}"
+
+# --- ADDED: DELETE USER ROUTE ---
+@app.route('/delete_user/<int:user_id>')
+def delete_user(user_id):
+    if 'user_id' not in session or session['user_id'] != 'ADMIN':
+        return redirect(url_for('index'))
+    try:
+        db = get_db()
+        cursor = db.cursor()
+        # First, delete bookings to avoid Foreign Key Constraint errors
+        cursor.execute("DELETE FROM booking WHERE userId = %s", (user_id,))
+        # Now delete the user
+        cursor.execute("DELETE FROM users WHERE userId = %s", (user_id,))
+        db.commit()
+        cursor.close(); db.close()
+        return redirect(url_for('admin_dashboard'))
+    except Exception as e:
+        return f"Delete Error: {e}"
 
 @app.route('/add_user', methods=['POST'])
 def add_user():
@@ -189,7 +186,6 @@ def signup():
     email = request.form.get('email')
     gender = request.form.get('gender')
     plain_pin = request.form.get('user_pin')
-
     hashed_pin = generate_password_hash(plain_pin)
 
     try:
@@ -198,17 +194,15 @@ def signup():
         cursor.execute("SELECT userId FROM users WHERE phone_number = %s", (phone,))
         if cursor.fetchone():
             cursor.close(); db.close()
-            # MODIFIED: Redirect to main page with error
             return render_template('BusSeatReservationSystem(vs).html', error="Phone number already exists")
 
-        sql = """INSERT INTO users (fname, lname, phone_number, email, gender, user_pin) 
-                 VALUES (%s, %s, %s, %s, %s, %s)"""
+        sql = "INSERT INTO users (fname, lname, phone_number, email, gender, user_pin) VALUES (%s, %s, %s, %s, %s, %s)"
         cursor.execute(sql, (fname, lname, phone, email, gender, hashed_pin))
         db.commit()
         cursor.close(); db.close()
         return redirect(url_for('index'))
     except Exception as e:
-        return render_template('BusSeatReservationSystem(vs).html', error="Signup failed. Please try again.")
+        return render_template('BusSeatReservationSystem(vs).html', error="Signup failed.")
 
 @app.route('/complete_trip/<int:booking_id>')
 def complete_trip(booking_id):
@@ -228,15 +222,12 @@ def complete_trip(booking_id):
 def process_booking():
     if 'user_id' not in session: return redirect(url_for('index'))
     user_id = session['user_id']
-    bus_id = request.form.get('busId')
-    seat_no = request.form.get('seatingno')
-    amount = request.form.get('amount_paid')
-    ticket_ref = str(uuid.uuid4())[:8].upper()
+    bus_id = request.form.get('busId'); seat_no = request.form.get('seatingno')
+    amount = request.form.get('amount_paid'); ticket_ref = str(uuid.uuid4())[:8].upper()
 
     try:
         db = get_db()
         cursor = db.cursor()
-        # Explicitly set status to Active for new bookings
         sql = """INSERT INTO booking (userId, busId, seatingno, amount_paid, ticket_ref, bookingdate, status) 
                  VALUES (%s, %s, %s, %s, %s, %s, 'Active')"""
         cursor.execute(sql, (user_id, bus_id, seat_no, amount, ticket_ref, datetime.now()))
