@@ -95,7 +95,7 @@ def admin_dashboard():
         rev_res = cursor.fetchone()
         total_revenue = rev_res['total'] if rev_res['total'] else 0.0
 
-        # 2. Passenger Registrations (Passing as tuples to match your HTML loop)
+        # 2. Passenger Registrations
         cursor.execute("SELECT userId, fname, lname, phone_number FROM users")
         passengers_raw = cursor.fetchall()
         passengers = [tuple(p.values()) for p in passengers_raw]
@@ -112,7 +112,7 @@ def admin_dashboard():
         """)
         bus_passengers = cursor.fetchall()
 
-        # 4. Reports (Logic for the "Booking Reports" tab - Unified for your template)
+        # 4. Reports
         cursor.execute("""
             SELECT b.bookingdate, u.fname, u.lname, b.seatingno, b.busId, b.amount_paid 
             FROM booking b
@@ -135,7 +135,23 @@ def admin_dashboard():
     except Exception as e:
         return f"Admin Dashboard Error: {e}"
 
-# --- ADDED: DELETE USER ROUTE ---
+# --- NEW: CANCEL BOOKING ROUTE ---
+@app.route('/cancel_booking/<int:booking_id>')
+def cancel_booking(booking_id):
+    if 'user_id' not in session:
+        return redirect(url_for('index'))
+    try:
+        db = get_db()
+        cursor = db.cursor()
+        # We delete the booking record entirely or update status to 'Cancelled'
+        cursor.execute("DELETE FROM booking WHERE bookingId = %s", (booking_id,))
+        db.commit()
+        cursor.close(); db.close()
+        return redirect(url_for('main_page'))
+    except Exception as e:
+        return f"Cancellation Error: {e}"
+
+# --- DELETE USER ROUTE ---
 @app.route('/delete_user/<int:user_id>')
 def delete_user(user_id):
     if 'user_id' not in session or session['user_id'] != 'ADMIN':
@@ -143,9 +159,7 @@ def delete_user(user_id):
     try:
         db = get_db()
         cursor = db.cursor()
-        # First, delete bookings to avoid Foreign Key Constraint errors
         cursor.execute("DELETE FROM booking WHERE userId = %s", (user_id,))
-        # Now delete the user
         cursor.execute("DELETE FROM users WHERE userId = %s", (user_id,))
         db.commit()
         cursor.close(); db.close()
@@ -164,7 +178,6 @@ def add_user():
     email = request.form.get('email')
     gender = request.form.get('gender')
     plain_pin = request.form.get('user_pin')
-
     hashed_pin = generate_password_hash(plain_pin)
 
     try:
