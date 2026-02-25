@@ -37,6 +37,14 @@
         .form-label { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: #999; }
         .form-select { border-radius: 8px; padding: 10px; font-weight: 600; border: 1.5px solid #eee; }
 
+        /* Color Legend / Key Styles */
+        .seat-legend {
+            display: flex; gap: 20px; justify-content: center; margin-bottom: 20px;
+            padding: 10px; background: #fff; border-radius: 10px; border: 1px solid #eee;
+        }
+        .legend-item { display: flex; align-items: center; gap: 8px; font-size: 0.75rem; font-weight: 700; }
+        .legend-box { width: 18px; height: 18px; border-radius: 4px; border: 1px solid #ddd; }
+
         .bus-card {
             background: white; border-radius: 16px; padding: 30px;
             border: 1px solid #eee; margin-bottom: 30px; 
@@ -132,6 +140,7 @@
     <div class="bus-list-container" style="max-width: 900px; margin: 0 auto; padding-top: 20px;">
         {% for bus in buses %}
             
+            {# Check if current logged-in user has booked this bus #}
             {% set my_booking = bookings | selectattr('busId', 'equalto', bus.busId) | selectattr('userId', 'equalto', session.get('user_id')) | list %}
 
             <div class="bus-card {% if my_booking %}booked-by-me{% endif %}">
@@ -161,6 +170,7 @@
                 <div class="d-flex justify-content-between align-items-end">
                     <div>
                         <div class="price-text fw-bold fs-4">KES 50.00</div>
+                        {# Calculate remaining seats #}
                         {% set taken_count = bookings | selectattr('busId', 'equalto', bus.busId) | list | length %}
                         <div class="text-muted small fw-bold">CAPACITY: {{ bus.totalcapacity - taken_count }} / {{ bus.totalcapacity }} LEFT</div>
                     </div>
@@ -183,14 +193,19 @@
 
                 <div class="collapse" id="collapse{{ bus.busId }}">
                     <div class="interior-container">
+                        
+                        <div class="seat-legend">
+                            <div class="legend-item"><div class="legend-box" style="background: white;"></div> Available</div>
+                            <div class="legend-item"><div class="legend-box" style="background: #f39c12; border:none;"></div> Taken</div>
+                            <div class="legend-item"><div class="legend-box" style="background: black; border:none;"></div> Your Choice</div>
+                        </div>
+
                         <div class="row">
-                            <div class="col-lg-7">
+                            <div class="col-lg-7 text-center">
                                 <div class="bus-frame shadow-sm">
                                     <div class="seat-grid">
-                                        {# DYNAMIC 1A, 1B, 1C, 1D FORMATTING #}
                                         {% set total_seats = bus.totalcapacity | int %}
-                                        {% set seats_per_row = 4 %}
-                                        {% set num_rows = (total_seats / seats_per_row) | round(0, 'ceil') | int %}
+                                        {% set num_rows = (total_seats / 4) | round(0, 'ceil') | int %}
                                         {% set count = namespace(value=0) %}
 
                                         {% for row_num in range(1, num_rows + 1) %}
@@ -200,6 +215,7 @@
                                                     {% if col_char == 'C' %}<div class="aisle-space"></div>{% endif %}
                                                     
                                                     {% set s_id = row_num | string + col_char %}
+                                                    {# Crucial: Check if THIS specific seat is booked by ANYONE in the DB #}
                                                     {% set is_taken = bookings | selectattr('busId', 'equalto', bus.busId) | selectattr('seatingno', 'equalto', s_id) | list %}
                                                     
                                                     <div class="seat {% if is_taken %}occupied{% endif %}" 
@@ -217,7 +233,7 @@
                                 </div>
                             </div>
                             <div class="col-lg-5">
-                                <div class="summary-panel">
+                                <div class="summary-panel h-100 d-flex flex-column justify-content-center">
                                     <h6 class="fw-800 text-muted uppercase small mb-4">Confirm Selection</h6>
                                     <div class="mb-3">
                                         <label class="text-muted small d-block">PASSENGER</label>
@@ -291,14 +307,21 @@
     }
 
     function selectSeat(el, seatId, busId) {
+        // If seat is orange (occupied), do nothing
         if (el.classList.contains('occupied')) return;
+        
         const frame = el.closest('.bus-frame');
+        // Clear selection from other seats in this bus only
         frame.querySelectorAll('.seat').forEach(s => s.classList.remove('selected'));
+        
+        // Mark current seat as black (selected)
         el.classList.add('selected');
 
+        // Update the summary panel
         document.getElementById('displaySeat' + busId).innerText = seatId;
         document.getElementById('btn' + busId).disabled = false;
 
+        // Pass the seat ID to the payment modal
         const modal = document.getElementById('paymentModal' + busId);
         modal.querySelector('.pay-seat-text').innerText = seatId;
         modal.querySelector('.pay-seat-input').value = seatId;
