@@ -24,11 +24,13 @@
             color: #111; 
         }
 
+        /* Top navigation bar */
         .navbar { background: white; border-bottom: 2px solid var(--brand-black); padding: 15px 0; }
         .navbar-brand { font-weight: 800; font-size: 1.4rem; color: var(--brand-black); text-decoration: none; }
         .user-pill { background: #f8f9fa; padding: 8px 16px; border-radius: 50px; border: 1px solid #eee; font-weight: 700; font-size: 0.85rem; }
         .signout-link { color: #dc3545; text-decoration: none; font-weight: 700; font-size: 0.85rem; margin-left: 15px; }
 
+        /* The search box at the top */
         .search-card {
             background: white; border-radius: 15px; padding: 25px;
             border: 1px solid #eee; box-shadow: 0 4px 20px rgba(0,0,0,0.02);
@@ -37,7 +39,7 @@
         .form-label { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: #999; }
         .form-select { border-radius: 8px; padding: 10px; font-weight: 600; border: 1.5px solid #eee; }
 
-        /* Color Legend / Key Styles */
+        /* Key showing what seat colors mean */
         .seat-legend {
             display: flex; gap: 20px; justify-content: center; margin-bottom: 20px;
             padding: 10px; background: #fff; border-radius: 10px; border: 1px solid #eee;
@@ -45,49 +47,59 @@
         .legend-item { display: flex; align-items: center; gap: 8px; font-size: 0.75rem; font-weight: 700; }
         .legend-box { width: 18px; height: 18px; border-radius: 4px; border: 1px solid #ddd; }
 
+        /* Individual bus listing card */
         .bus-card {
             background: white; border-radius: 16px; padding: 30px;
             border: 1px solid #eee; margin-bottom: 30px; 
             position: relative; transition: transform 0.2s;
         }
 
+        /* Highlight a bus if the user already has a seat on it */
         .bus-card.booked-by-me {
             border-left: 8px solid var(--brand-orange);
             background-color: #fffdf9;
         }
 
+        /* Visual timeline of the route */
         .route-visual { display: flex; align-items: center; justify-content: space-between; margin: 25px 0; }
         .time-big { font-size: 2.2rem; font-weight: 800; letter-spacing: -1.5px; line-height: 1; }
         .loc-small { color: #888; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; }
         .connector { flex-grow: 1; height: 1px; background: #ddd; margin: 0 25px; position: relative; }
         .connector::after { content: '→'; position: absolute; right: -5px; top: -14px; font-size: 1.2rem; }
 
+        /* Wrapper for the seat picker */
         .interior-container { 
             background: #fafafa; border-radius: 20px; padding: 30px; 
             border: 1px solid #eee; margin-top: 25px; 
         }
 
+        /* The actual shape of the bus interior */
         .bus-frame {
             max-width: 360px; margin: 0 auto; background: white; 
             padding: 35px 20px; border: 2px solid #eee; border-radius: 45px 45px 15px 15px;
         }
 
+        /* Seat layout grid */
         .seat-grid { display: grid; grid-template-columns: 20px 1fr 1fr 30px 1fr 1fr; gap: 12px; align-items: center; }
         .row-id { font-size: 0.7rem; font-weight: 800; color: #ddd; text-align: center; }
         
+        /* Individual seat styling */
         .seat { 
             height: 45px; background: var(--seat-available); border: 1.5px solid #e0e0e0; 
             border-radius: 8px; cursor: pointer; display: flex; align-items: center; 
             justify-content: center; font-size: 0.75rem; font-weight: 700; 
         }
 
+        /* Colors for different seat states */
         .seat.occupied { background: var(--brand-orange) !important; color: white !important; cursor: not-allowed; border: none; }
         .seat.selected { background: var(--brand-black) !important; color: white !important; }
 
+        /* The checkout panel next to the seats */
         .summary-panel { background: white; padding: 25px; border-radius: 12px; border: 1px solid #eee; }
         .btn-confirm { background: #000; color: #fff; width: 100%; padding: 15px; border-radius: 10px; font-weight: 700; border: none; }
         .btn-confirm:disabled { background: #666; cursor: not-allowed; }
 
+        /* Styling for the digital ticket popup */
         .ticket-design { border: 2px dashed #ccc; padding: 20px; border-radius: 15px; background: #fff; max-width: 350px; margin: 0 auto; }
         .qr-placeholder { width: 120px; height: 120px; background: #222; margin: 15px auto; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 2.5rem; }
         
@@ -140,7 +152,6 @@
     <div class="bus-list-container" style="max-width: 900px; margin: 0 auto; padding-top: 20px;">
         {% for bus in buses %}
             
-            {# Check if current logged-in user has booked this bus #}
             {% set my_booking = bookings | selectattr('busId', 'equalto', bus.busId) | selectattr('userId', 'equalto', session.get('user_id')) | list %}
 
             <div class="bus-card {% if my_booking %}booked-by-me{% endif %}">
@@ -170,7 +181,6 @@
                 <div class="d-flex justify-content-between align-items-end">
                     <div>
                         <div class="price-text fw-bold fs-4">KES 50.00</div>
-                        {# Calculate remaining seats #}
                         {% set taken_count = bookings | selectattr('busId', 'equalto', bus.busId) | list | length %}
                         <div class="text-muted small fw-bold">CAPACITY: {{ bus.totalcapacity - taken_count }} / {{ bus.totalcapacity }} LEFT</div>
                     </div>
@@ -215,7 +225,6 @@
                                                     {% if col_char == 'C' %}<div class="aisle-space"></div>{% endif %}
                                                     
                                                     {% set s_id = row_num | string + col_char %}
-                                                    {# Crucial: Check if THIS specific seat is booked by ANYONE in the DB #}
                                                     {% set is_taken = bookings | selectattr('busId', 'equalto', bus.busId) | selectattr('seatingno', 'equalto', s_id) | list %}
                                                     
                                                     <div class="seat {% if is_taken %}occupied{% endif %}" 
@@ -299,6 +308,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+    /* Change the text on the bus cards based on search dropdowns */
     function syncRouteLabels() {
         const pickup = document.getElementById('pickupSelect').value;
         const destination = document.getElementById('destSelect').value;
@@ -306,27 +316,29 @@
         document.querySelectorAll('.cardDest').forEach(el => el.innerText = destination);
     }
 
+    /* Handle clicking a seat */
     function selectSeat(el, seatId, busId) {
-        // If seat is orange (occupied), do nothing
+        // Stop if the seat is already taken
         if (el.classList.contains('occupied')) return;
         
         const frame = el.closest('.bus-frame');
-        // Clear selection from other seats in this bus only
+        // Un-select any previously clicked seat in this specific bus
         frame.querySelectorAll('.seat').forEach(s => s.classList.remove('selected'));
         
-        // Mark current seat as black (selected)
+        // Color the new seat black
         el.classList.add('selected');
 
-        // Update the summary panel
+        // Update the info box and enable the payment button
         document.getElementById('displaySeat' + busId).innerText = seatId;
         document.getElementById('btn' + busId).disabled = false;
 
-        // Pass the seat ID to the payment modal
+        // Sync the seat number to the payment popup hidden fields
         const modal = document.getElementById('paymentModal' + busId);
         modal.querySelector('.pay-seat-text').innerText = seatId;
         modal.querySelector('.pay-seat-input').value = seatId;
     }
 
+    /* Convert the ticket HTML into an image and download it */
     function downloadTicket(divId, ticketRef) {
         const target = document.getElementById(divId);
         html2canvas(target).then(canvas => {

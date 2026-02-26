@@ -7,20 +7,47 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
+        /* Make the page take up the full screen */
         body, html { height: 100%; margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; }
+        
+        /* Split the screen into two halves */
         .split-container { display: flex; height: 100vh; width: 100%; }
-        .side-image { flex: 1; background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&q=80&w=2017'); background-size: cover; background-position: center; display: flex; flex-direction: column; justify-content: flex-end; padding: 60px; color: white; }
+        
+        /* Left side with the big bus background image */
+        .side-image { 
+            flex: 1; 
+            background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&q=80&w=2017'); 
+            background-size: cover; 
+            background-position: center; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: flex-end; 
+            padding: 60px; 
+            color: white; 
+        }
+        
+        /* Smooth transition for the changing quotes */
         .quote-box { transition: opacity 0.8s ease-in-out; min-height: 150px; }
+        
+        /* Right side where the forms sit */
         .side-form { flex: 1; display: flex; align-items: center; justify-content: center; background: white; padding: 40px; }
+        
         .form-content { width: 100%; max-width: 420px; transition: all 0.3s ease; }
+        
+        /* Modern rounded inputs */
         .form-control, .form-select { height: 50px; border: 1.5px solid #eee; border-radius: 10px; margin-bottom: 15px; font-size: 0.95rem; }
+        
         .security-spacer { margin-top: 25px; border-top: 1px solid #f8f8f8; padding-top: 15px; }
+        
         .btn-black { background: #000; color: white; height: 50px; width: 100%; border-radius: 10px; font-weight: 600; margin-top: 10px; border: none; }
+        
+        /* Hide stuff we aren't using yet */
         .hidden { display: none; }
         
-        /* Error Message Styling */
+        /* Red text for errors */
         .error-text { color: #dc3545; font-size: 0.8rem; font-weight: 600; margin-top: -10px; margin-bottom: 15px; display: block; }
         
+        /* Hide the image on mobile to keep things simple */
         @media (max-width: 992px) { .side-image { display: none; } }
     </style>
 </head>
@@ -33,6 +60,7 @@
                 <p id="dynamicRole" class="small opacity-75">Daily Commuter, Nairobi</p>
             </div>
         </div>
+
         <div class="side-form">
             <div id="loginForm" class="form-content">
                 <h2 class="fw-bold">Welcome back!</h2>
@@ -65,47 +93,57 @@
                            pattern="[0-9]{10}" title="Please enter a valid 10-digit Kenyan phone number" required>
                     
                     <input type="email" name="email" class="form-control" placeholder="Email Address" required>
+                    
                     <select name="gender" class="form-select" required>
                         <option value="" disabled selected>Select Gender</option>
                         <option value="Male">Male</option>
                         <option value="Female">Female</option>
                         <option value="Other">Other</option>
                     </select>
+
                     <div class="security-spacer">
                         <p class="small text-muted mb-2 fw-bold" style="letter-spacing: 1px; text-transform: uppercase; font-size: 0.7rem;">Account Security</p>
                         <input type="password" name="user_pin" class="form-control" placeholder="Set 4-Digit PIN" maxlength="4" required>
                     </div>
+
                     <button type="submit" class="btn btn-black">Create account</button>
                 </form>
                 <p class="text-center mt-4 small">Already have an account? <a href="javascript:void(0)" onclick="toggleForms()" class="text-dark fw-bold">Sign in</a></p>
             </div>
         </div>
     </div>
+
     <script>
+        // Reviews that cycle on the left side
         const testimonials = [
             {quote: '"Ride Smart has completely changed how I move around the city."', author: "Jane Wambui", role: "Daily Commuter, Nairobi"}, 
             {quote: '"Finally, a reliable way to book my seat before I even leave the house."', author: "David Maina", role: "Business Executive"}, 
             {quote: '"No more carrying exact change. The M-Pesa integration is seamless."', author: "Sarah Cherono", role: "University Student"}
         ];
+
         let currentIndex = 0;
         const container = document.getElementById('quoteContainer');
         const quoteText = document.getElementById('dynamicQuote');
         const authorText = document.getElementById('dynamicAuthor');
         const roleText = document.getElementById('dynamicRole');
 
+        // Swap out the text with a fade effect
         function rotateTestimonials() {
             if(!container) return;
-            container.style.opacity = 0;
+            container.style.opacity = 0; 
             setTimeout(() => {
                 currentIndex = (currentIndex + 1) % testimonials.length;
                 quoteText.innerText = testimonials[currentIndex].quote;
                 authorText.innerText = testimonials[currentIndex].author;
                 roleText.innerText = testimonials[currentIndex].role;
-                container.style.opacity = 1;
+                container.style.opacity = 1; 
             }, 800);
         }
+        
+        // Cycle every 5 seconds
         setInterval(rotateTestimonials, 5000);
 
+        // Switch between login and signup forms
         function toggleForms() {
             document.getElementById('loginForm').classList.toggle('hidden');
             document.getElementById('signupForm').classList.toggle('hidden');
