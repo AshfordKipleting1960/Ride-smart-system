@@ -22,20 +22,32 @@
             color: white; 
         }
         .quote-box { transition: opacity 0.8s ease-in-out; min-height: 150px; }
-        .side-form { flex: 1; display: flex; align-items: center; justify-content: center; background: white; padding: 40px; }
+        .side-form { flex: 1; display: flex; align-items: center; justify-content: center; background: white; padding: 40px; position: relative; }
         .form-content { width: 100%; max-width: 420px; transition: all 0.3s ease; }
         
-        /* Form Styling */
         .form-control, .form-select { height: 50px; border: 1.5px solid #eee; border-radius: 10px; margin-bottom: 5px; font-size: 0.95rem; }
         .security-spacer { margin-top: 25px; border-top: 1px solid #f8f8f8; padding-top: 15px; }
         .btn-black { background: #000; color: white; height: 50px; width: 100%; border-radius: 10px; font-weight: 600; margin-top: 10px; border: none; }
-        .hidden { display: none; }
-        .error-text { color: #dc3545; font-size: 0.8rem; font-weight: 600; margin-bottom: 15px; display: block; }
+        
+        .hidden { display: none !important; } 
+        
+        .success-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            z-index: 1000;
+            padding: 40px;
+        }
+        .success-icon { font-size: 4rem; color: #198754; margin-bottom: 20px; }
 
-        /* Real-time Validation Styling */
         .validation-hint { font-size: 0.75rem; margin-bottom: 12px; font-weight: 600; display: flex; align-items: center; gap: 5px; }
-        .text-invalid { color: #dc3545; } /* Red */
-        .text-valid { color: #198754; }   /* Green */
+        .text-invalid { color: #dc3545; }
+        .text-valid { color: #198754; }
 
         @media (max-width: 992px) { .side-image { display: none; } }
     </style>
@@ -51,21 +63,22 @@
         </div>
 
         <div class="side-form">
+            <div id="successMessage" class="success-overlay hidden">
+                <i class="bi bi-check-circle-fill success-icon"></i>
+                <h2 class="fw-bold">Account Created!</h2>
+                <p class="text-muted">Welcome to Ride Smart. Sending your details to the database...</p>
+            </div>
+
             <div id="loginForm" class="form-content">
                 <h2 class="fw-bold">Welcome back!</h2>
                 <p class="text-muted mb-4">Please enter your details to sign in.</p>
                 
                 <form action="/login" method="POST" id="mainLoginForm">
-                    <input type="tel" id="loginPhone" name="phone_number" class="form-control" placeholder="Phone number (e.g. 07...)" 
-                            pattern="[0-9]{10}" maxlength="10" required>
-                    <div id="phoneHint" class="validation-hint text-invalid">
-                        <i id="phoneIcon" class="bi bi-x-circle"></i> Must be 10 digits
-                    </div>
+                    <input type="tel" id="loginPhone" name="phone_number" class="form-control" placeholder="Phone number (e.g. 07...)" pattern="[0-9]{10}" maxlength="10" required>
+                    <div id="phoneHint" class="validation-hint text-invalid"><i id="phoneIcon" class="bi bi-x-circle"></i> Must be 10 digits</div>
                     
                     <input type="password" id="loginPin" name="user_pin" class="form-control" placeholder="4-Digit PIN" maxlength="4" required>
-                    <div id="pinHint" class="validation-hint text-invalid">
-                        <i id="pinIcon" class="bi bi-x-circle"></i> Must be 4 digits
-                    </div>
+                    <div id="pinHint" class="validation-hint text-invalid"><i id="pinIcon" class="bi bi-x-circle"></i> Must be 4 digits</div>
                     
                     {% if error %}
                     <span class="error-text"><i class="bi bi-exclamation-circle me-1"></i> {{ error }}</span>
@@ -79,7 +92,7 @@
             <div id="signupForm" class="form-content hidden">
                 <h2 class="fw-bold">Create account</h2>
                 <p class="text-muted mb-4">Join 10,000+ commuters today.</p>
-                <form action="/signup" method="POST">
+                <form id="registrationForm" action="/signup" method="POST" onsubmit="showSuccess()">
                     <div class="row g-2">
                         <div class="col"><input type="text" name="fname" class="form-control" placeholder="First name" required></div>
                         <div class="col"><input type="text" name="lname" class="form-control" placeholder="Last name" required></div>
@@ -104,75 +117,54 @@
     </div>
 
     <script>
-        // --- REAL-TIME VALIDATION LOGIC ---
+        function toggleForms() {
+            document.getElementById('loginForm').classList.toggle('hidden');
+            document.getElementById('signupForm').classList.toggle('hidden');
+        }
+
+        // --- THE FIX ---
+        // This function shows the UI message BUT allows the form to submit to Python
+        function showSuccess() {
+            document.getElementById('signupForm').classList.add('hidden');
+            document.getElementById('successMessage').classList.remove('hidden');
+            // Form continues to submit naturally to your /signup route
+        }
+
         const loginPhone = document.getElementById('loginPhone');
         const loginPin = document.getElementById('loginPin');
         const loginSubmit = document.getElementById('loginSubmit');
 
-        function validateInput() {
-            const isPhoneValid = loginPhone.value.length === 10;
-            const isPinValid = loginPin.value.length === 4;
-
-            // Update Phone Hint
-            const phoneHint = document.getElementById('phoneHint');
-            const phoneIcon = document.getElementById('phoneIcon');
-            if (isPhoneValid) {
-                phoneHint.classList.replace('text-invalid', 'text-valid');
-                phoneIcon.classList.replace('bi-x-circle', 'bi-check-circle');
-            } else {
-                phoneHint.classList.replace('text-valid', 'text-invalid');
-                phoneIcon.classList.replace('bi-check-circle', 'bi-x-circle');
-            }
-
-            // Update PIN Hint
-            const pinHint = document.getElementById('pinHint');
-            const pinIcon = document.getElementById('pinIcon');
-            if (isPinValid) {
-                pinHint.classList.replace('text-invalid', 'text-valid');
-                pinIcon.classList.replace('bi-x-circle', 'bi-check-circle');
-            } else {
-                pinHint.classList.replace('text-valid', 'text-invalid');
-                pinIcon.classList.replace('bi-check-circle', 'bi-x-circle');
-            }
-
-            // Enable/Disable Button
-            loginSubmit.disabled = !(isPhoneValid && isPinValid);
+        function validate() {
+            const pValid = loginPhone.value.length === 10;
+            const pinValid = loginPin.value.length === 4;
+            document.getElementById('phoneHint').className = pValid ? 'validation-hint text-valid' : 'validation-hint text-invalid';
+            document.getElementById('phoneIcon').className = pValid ? 'bi bi-check-circle' : 'bi bi-x-circle';
+            document.getElementById('pinHint').className = pinValid ? 'validation-hint text-valid' : 'validation-hint text-invalid';
+            document.getElementById('pinIcon').className = pinValid ? 'bi bi-check-circle' : 'bi bi-x-circle';
+            loginSubmit.disabled = !(pValid && pinValid);
         }
 
-        loginPhone.addEventListener('input', validateInput);
-        loginPin.addEventListener('input', validateInput);
+        loginPhone.addEventListener('input', validate);
+        loginPin.addEventListener('input', validate);
 
-        // --- EXISTING TESTIMONIAL & TOGGLE LOGIC ---
         const testimonials = [
             {quote: '"Ride Smart has completely changed how I move around the city."', author: "Jane Wambui", role: "Daily Commuter, Nairobi"}, 
             {quote: '"Finally, a reliable way to book my seat before I even leave the house."', author: "David Maina", role: "Business Executive"}, 
             {quote: '"No more carrying exact change. The M-Pesa integration is seamless."', author: "Sarah Cherono", role: "University Student"}
         ];
-
-        let currentIndex = 0;
-        const container = document.getElementById('quoteContainer');
-        const quoteText = document.getElementById('dynamicQuote');
-        const authorText = document.getElementById('dynamicAuthor');
-        const roleText = document.getElementById('dynamicRole');
-
-        function rotateTestimonials() {
+        let idx = 0;
+        setInterval(() => {
+            const container = document.getElementById('quoteContainer');
             if(!container) return;
-            container.style.opacity = 0; 
+            container.style.opacity = 0;
             setTimeout(() => {
-                currentIndex = (currentIndex + 1) % testimonials.length;
-                quoteText.innerText = testimonials[currentIndex].quote;
-                authorText.innerText = testimonials[currentIndex].author;
-                roleText.innerText = testimonials[currentIndex].role;
-                container.style.opacity = 1; 
+                idx = (idx + 1) % testimonials.length;
+                document.getElementById('dynamicQuote').innerText = testimonials[idx].quote;
+                document.getElementById('dynamicAuthor').innerText = testimonials[idx].author;
+                document.getElementById('dynamicRole').innerText = testimonials[idx].role;
+                container.style.opacity = 1;
             }, 800);
-        }
-        
-        setInterval(rotateTestimonials, 5000);
-
-        function toggleForms() {
-            document.getElementById('loginForm').classList.toggle('hidden');
-            document.getElementById('signupForm').classList.toggle('hidden');
-        }
+        }, 5000);
     </script>
 </body>
 </html>

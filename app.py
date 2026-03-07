@@ -20,7 +20,9 @@ def get_db():
 # Home page
 @app.route('/')
 def index():
-    return render_template('BusSeatReservationSystem(vs).html')
+    # Catch the success flag from the URL redirect to show the UI message
+    success = request.args.get('success')
+    return render_template('BusSeatReservationSystem(vs).html', success=success)
 
 # Login logic
 @app.route('/login', methods=['POST'])
@@ -62,11 +64,9 @@ def main_page():
     try:
         db = get_db()
         cursor = db.cursor(dictionary=True)
-        # Get all buses
         cursor.execute("SELECT busId, plateno, totalcapacity FROM bus")
         buses = cursor.fetchall()
         
-        # Only show seats that are currently booked/active
         cursor.execute("""
             SELECT bookingId, userId, busId, seatingno, ticket_ref, amount_paid 
             FROM booking WHERE status = 'Active' OR status IS NULL
@@ -88,7 +88,6 @@ def admin_dashboard():
         db = get_db()
         cursor = db.cursor(dictionary=True)
 
-        # Count buses, active bookings, and users for the cards
         cursor.execute("SELECT COUNT(*) as total FROM bus")
         bus_count = cursor.fetchone()['total']
         
@@ -102,16 +101,13 @@ def admin_dashboard():
         rev_res = cursor.fetchone()
         total_revenue = rev_res['total'] if rev_res['total'] else 0.0
 
-        # List of all passengers
         cursor.execute("SELECT userId, fname, lname, phone_number FROM users")
         passengers_raw = cursor.fetchall()
         passengers = [tuple(p.values()) for p in passengers_raw]
 
-        # Get fleet details
         cursor.execute("SELECT busId, plateno, totalcapacity FROM bus")
         all_buses = cursor.fetchall()
 
-        # Show who is currently on which bus
         cursor.execute("""
             SELECT b.bookingId, b.seatingno, u.fname, u.lname, b.bookingdate, b.busId 
             FROM booking b
@@ -120,7 +116,6 @@ def admin_dashboard():
         """)
         bus_passengers = cursor.fetchall()
 
-        # Get full history for reports
         cursor.execute("""
             SELECT b.bookingdate, u.fname, u.lname, b.seatingno, b.busId, b.amount_paid 
             FROM booking b
@@ -272,10 +267,13 @@ def signup():
 
         sql = "INSERT INTO users (fname, lname, phone_number, email, gender, user_pin) VALUES (%s, %s, %s, %s, %s, %s)"
         cursor.execute(sql, (fname, lname, phone, email, gender, hashed_pin))
-        db.commit()
+        db.commit() # ENSURES DATA IS WRITTEN
         cursor.close(); db.close()
-        return redirect(url_for('index'))
+        
+        # REDIRECT to clear form state and trigger success message in index
+        return redirect(url_for('index', success='true'))
     except Exception as e:
+        print(f"Signup Database Error: {e}") # Check your terminal if it fails
         return render_template('BusSeatReservationSystem(vs).html', error="Signup failed.")
 
 # Mark a specific booking as done
