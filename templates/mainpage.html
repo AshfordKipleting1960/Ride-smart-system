@@ -62,7 +62,10 @@
 
         /* Visual timeline of the route */
         .route-visual { display: flex; align-items: center; justify-content: space-between; margin: 25px 0; }
-        .time-big { font-size: 2.2rem; font-weight: 800; letter-spacing: -1.5px; line-height: 1; }
+        
+        /* ADJUSTED: Reduced font for time */
+        .time-big { font-size: 1.6rem; font-weight: 800; letter-spacing: -1px; line-height: 1; }
+        
         .loc-small { color: #888; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; }
         .connector { flex-grow: 1; height: 1px; background: #ddd; margin: 0 25px; position: relative; }
         .connector::after { content: '→'; position: absolute; right: -5px; top: -14px; font-size: 1.2rem; }
@@ -107,6 +110,9 @@
         
         .aisle-space { width: 30px; }
         .empty-space { height: 45px; }
+
+        /* ADJUSTED: Reduced font for price */
+        .price-text { font-size: 1.15rem !important; }
     </style>
 </head>
 <body>
@@ -180,7 +186,7 @@
 
                 <div class="d-flex justify-content-between align-items-end">
                     <div>
-                        <div class="price-text fw-bold fs-4">KES 50.00</div>
+                        <div class="price-text fw-bold">KES 50.00</div>
                         {% set taken_count = bookings | selectattr('busId', 'equalto', bus.busId) | list | length %}
                         <div class="text-muted small fw-bold">CAPACITY: {{ bus.totalcapacity - taken_count }} / {{ bus.totalcapacity }} LEFT</div>
                     </div>
@@ -188,9 +194,9 @@
                     {% if my_booking %}
                         <div class="text-end">
                             <span class="text-success fw-bold d-block">CONFIRMED (Seat {{ my_booking[0].seatingno }})</span>
-                            <a href="/cancel_booking/{{ my_booking[0].bookingId }}" 
+                            <a href="javascript:void(0)" 
                                class="cancel-link" 
-                               onclick="return confirm('Cancel this booking and free your seat?')">
+                               onclick="triggerCancelModal('/cancel_booking/{{ my_booking[0].bookingId }}')">
                                Cancel Booking
                             </a>
                         </div>
@@ -203,7 +209,6 @@
 
                 <div class="collapse" id="collapse{{ bus.busId }}">
                     <div class="interior-container">
-                        
                         <div class="seat-legend">
                             <div class="legend-item"><div class="legend-box" style="background: white;"></div> Available</div>
                             <div class="legend-item"><div class="legend-box" style="background: #f39c12; border:none;"></div> Taken</div>
@@ -306,9 +311,34 @@
     </div>
 </div>
 
+<div class="modal fade" id="hciCancelModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+            <div class="modal-body text-center p-4">
+                <div class="mb-3">
+                    <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 3rem;"></i>
+                </div>
+                <h5 class="fw-bold">Release Seat?</h5>
+                <p class="text-muted small">Are you sure you want to cancel? This action cannot be undone once the seat is freed.</p>
+                <div class="d-grid gap-2">
+                    <a id="confirmCancelBtn" href="#" class="btn btn-danger fw-bold py-2" style="border-radius: 10px;">Yes, Cancel Booking</a>
+                    <button type="button" class="btn btn-light fw-bold py-2" data-bs-dismiss="modal" style="border-radius: 10px;">Keep My Seat</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    /* Change the text on the bus cards based on search dropdowns */
+    // HCI: Handles the warning dialog before redirection
+    function triggerCancelModal(cancelUrl) {
+        const confirmBtn = document.getElementById('confirmCancelBtn');
+        confirmBtn.setAttribute('href', cancelUrl);
+        const cancelModal = new bootstrap.Modal(document.getElementById('hciCancelModal'));
+        cancelModal.show();
+    }
+
     function syncRouteLabels() {
         const pickup = document.getElementById('pickupSelect').value;
         const destination = document.getElementById('destSelect').value;
@@ -316,29 +346,18 @@
         document.querySelectorAll('.cardDest').forEach(el => el.innerText = destination);
     }
 
-    /* Handle clicking a seat */
     function selectSeat(el, seatId, busId) {
-        // Stop if the seat is already taken
         if (el.classList.contains('occupied')) return;
-        
         const frame = el.closest('.bus-frame');
-        // Un-select any previously clicked seat in this specific bus
         frame.querySelectorAll('.seat').forEach(s => s.classList.remove('selected'));
-        
-        // Color the new seat black
         el.classList.add('selected');
-
-        // Update the info box and enable the payment button
         document.getElementById('displaySeat' + busId).innerText = seatId;
         document.getElementById('btn' + busId).disabled = false;
-
-        // Sync the seat number to the payment popup hidden fields
         const modal = document.getElementById('paymentModal' + busId);
         modal.querySelector('.pay-seat-text').innerText = seatId;
         modal.querySelector('.pay-seat-input').value = seatId;
     }
 
-    /* Convert the ticket HTML into an image and download it */
     function downloadTicket(divId, ticketRef) {
         const target = document.getElementById(divId);
         html2canvas(target).then(canvas => {
