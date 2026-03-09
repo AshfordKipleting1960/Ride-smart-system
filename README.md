@@ -1,0 +1,1 @@
+A Short Distance bus reservation system for my final year project. Impelemented using html , CSS and Java script for the front end and python as the back end. The framework used for the back-end is flask.
