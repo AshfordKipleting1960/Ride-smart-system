@@ -274,7 +274,7 @@ def process_booking():
     try:
         access_token = get_access_token()
         if not access_token:
-            return "Error: Could not connect to Safaricom. Check your credentials/internet."
+            return "Error: Could not connect to Safaricom. Check your credentials or internet."
             
         timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
         password = generate_password(MPESA_SHORTCODE, MPESA_PASSKEY, timestamp)
