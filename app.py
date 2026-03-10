@@ -269,7 +269,7 @@ def process_booking():
     phone = session.get('user_phone')
 
     if not phone:
-        return "Error: No phone found in session. Please log out and back in."
+        return "Error: No phone found in session. Please log out and back inside."
 
     try:
         access_token = get_access_token()
