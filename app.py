@@ -95,13 +95,15 @@ def main_page():
         cursor.execute("SELECT busId, plateno, totalcapacity FROM bus")
         buses = cursor.fetchall()
         
+        # Logic Gate check: Filter to show only the user's relevant bookings
         cursor.execute("""
-            SELECT bookingId, userId, busId, seatingno, ticket_ref, amount_paid 
-            FROM booking WHERE status = 'Active' OR status IS NULL OR status = 'Pending'
-        """)
+            SELECT bookingId, userId, busId, seatingno, ticket_ref, amount_paid, status 
+            FROM booking WHERE userId = %s AND (status = 'Completed' OR status = 'Pending' OR status = 'Active')
+        """, (session['user_id'],))
         bookings_list = cursor.fetchall()
         
-        cursor.close(); db.close()
+        cursor.close()
+        db.close()
         return render_template('mainpage.html', user_name=session['user_name'], buses=buses, bookings=bookings_list)
     except Exception as e:
         return f"Database Error: {e}"
@@ -115,35 +117,48 @@ def admin_dashboard():
     try:
         db = get_db()
         cursor = db.cursor(dictionary=True)
+        
         cursor.execute("SELECT COUNT(*) as total FROM bus")
         bus_count = cursor.fetchone()['total']
-        cursor.execute("SELECT COUNT(*) as total FROM booking WHERE status = 'Active' OR status IS NULL OR status = 'Pending'")
+        
+        # CHANGED: Count all bookings that are either Pending or Completed for better visibility
+        cursor.execute("SELECT COUNT(*) as total FROM booking WHERE status IN ('Completed', 'Pending', 'Active')")
         booking_count = cursor.fetchone()['total']
+        
         cursor.execute("SELECT COUNT(*) as total FROM users")
         passenger_count = cursor.fetchone()['total']
-        cursor.execute("SELECT SUM(amount_paid) as total FROM booking")
+        
+        cursor.execute("SELECT SUM(amount_paid) as total FROM booking WHERE status = 'Completed'")
         rev_res = cursor.fetchone()
         total_revenue = rev_res['total'] if rev_res['total'] else 0.0
+        
         cursor.execute("SELECT userId, fname, lname, phone_number FROM users")
         passengers_raw = cursor.fetchall()
         passengers = [tuple(p.values()) for p in passengers_raw]
+        
         cursor.execute("SELECT busId, plateno, totalcapacity FROM bus")
         all_buses = cursor.fetchall()
+        
+        # CHANGED: Show all passengers in Fleet Management regardless of status so the list isn't empty
         cursor.execute("""
-            SELECT b.bookingId, b.seatingno, u.fname, u.lname, b.bookingdate, b.busId 
+            SELECT b.bookingId, b.seatingno, u.fname, u.lname, b.bookingdate, b.busId, b.status
             FROM booking b
             JOIN users u ON b.userId = u.userId
-            WHERE b.status = 'Active' OR b.status IS NULL OR b.status = 'Pending'
+            ORDER BY b.bookingdate DESC
         """)
         bus_passengers = cursor.fetchall()
+        
+        # CHANGED: Detailed booking list for the "All Bookings" table
         cursor.execute("""
-            SELECT b.bookingdate, u.fname, u.lname, b.seatingno, b.busId, b.amount_paid 
+            SELECT b.bookingdate, u.fname, u.lname, b.seatingno, b.busId, b.amount_paid, b.status 
             FROM booking b
             JOIN users u ON b.userId = u.userId
             ORDER BY b.bookingdate DESC
         """)
         all_bookings = cursor.fetchall()
-        cursor.close(); db.close()
+        
+        cursor.close()
+        db.close()
         
         return render_template('dashboards.html', 
                                bus_count=bus_count,
@@ -165,107 +180,158 @@ def add_bus():
     plateno = request.form.get('plateno')
     capacity = request.form.get('capacity')
     try:
-        db = get_db(); cursor = db.cursor()
+        db = get_db()
+        cursor = db.cursor()
         cursor.execute("INSERT INTO bus (plateno, totalcapacity) VALUES (%s, %s)", (plateno, capacity))
-        db.commit(); cursor.close(); db.close()
+        db.commit()
+        cursor.close()
+        db.close()
         return redirect(url_for('admin_dashboard'))
-    except Exception as e: return f"Error adding bus: {e}"
+    except Exception as e: 
+        return f"Error adding bus: {e}"
 
 # Remove a bus and its bookings
 @app.route('/delete_bus/<int:bus_id>')
 def delete_bus(bus_id):
-    if 'user_id' not in session or session['user_id'] != 'ADMIN': return redirect(url_for('index'))
+    if 'user_id' not in session or session['user_id'] != 'ADMIN': 
+        return redirect(url_for('index'))
     try:
-        db = get_db(); cursor = db.cursor()
+        db = get_db()
+        cursor = db.cursor()
         cursor.execute("DELETE FROM booking WHERE busId = %s", (bus_id,))
         cursor.execute("DELETE FROM bus WHERE busId = %s", (bus_id,))
-        db.commit(); cursor.close(); db.close()
+        db.commit()
+        cursor.close()
+        db.close()
         return redirect(url_for('admin_dashboard'))
-    except Exception as e: return f"Error deleting bus: {e}"
+    except Exception as e: 
+        return f"Error deleting bus: {e}"
 
 # Clear seats once a trip is done
 @app.route('/finish_trip/<int:bus_id>')
 def finish_trip(bus_id):
-    if 'user_id' not in session or session['user_id'] != 'ADMIN': return redirect(url_for('index'))
+    if 'user_id' not in session or session['user_id'] != 'ADMIN': 
+        return redirect(url_for('index'))
     try:
-        db = get_db(); cursor = db.cursor()
+        db = get_db()
+        cursor = db.cursor()
         cursor.execute("UPDATE booking SET status = 'Completed' WHERE busId = %s AND (status = 'Active' OR status IS NULL OR status = 'Pending')", (bus_id,))
-        db.commit(); cursor.close(); db.close()
+        db.commit()
+        cursor.close()
+        db.close()
         return redirect(url_for('admin_dashboard'))
-    except Exception as e: return f"Error finishing trip: {e}"
+    except Exception as e: 
+        return f"Error finishing trip: {e}"
 
 # Delete a single booking
 @app.route('/cancel_booking/<int:booking_id>')
 def cancel_booking(booking_id):
-    if 'user_id' not in session: return redirect(url_for('index'))
+    if 'user_id' not in session: 
+        return redirect(url_for('index'))
     try:
-        db = get_db(); cursor = db.cursor()
+        db = get_db()
+        cursor = db.cursor()
         cursor.execute("DELETE FROM booking WHERE bookingId = %s", (booking_id,))
-        db.commit(); cursor.close(); db.close()
+        db.commit()
+        cursor.close()
+        db.close()
         return redirect(url_for('main_page'))
-    except Exception as e: return f"Cancellation Error: {e}"
+    except Exception as e: 
+        return f"Cancellation Error: {e}"
 
 # Wipe a user from the system
 @app.route('/delete_user/<int:user_id>')
 def delete_user(user_id):
-    if 'user_id' not in session or session['user_id'] != 'ADMIN': return redirect(url_for('index'))
+    if 'user_id' not in session or session['user_id'] != 'ADMIN': 
+        return redirect(url_for('index'))
     try:
-        db = get_db(); cursor = db.cursor()
+        db = get_db()
+        cursor = db.cursor()
         cursor.execute("DELETE FROM booking WHERE userId = %s", (user_id,))
         cursor.execute("DELETE FROM users WHERE userId = %s", (user_id,))
-        db.commit(); cursor.close(); db.close()
+        db.commit()
+        cursor.close()
+        db.close()
         return redirect(url_for('admin_dashboard'))
-    except Exception as e: return f"Delete Error: {e}"
+    except Exception as e: 
+        return f"Delete Error: {e}"
 
 # Admin adding a user manually
 @app.route('/add_user', methods=['POST'])
 def add_user():
-    if 'user_id' not in session or session['user_id'] != 'ADMIN': return redirect(url_for('index'))
-    fname = request.form.get('fname'); lname = request.form.get('lname'); phone = request.form.get('phone_number')
-    email = request.form.get('email'); gender = request.form.get('gender'); plain_pin = request.form.get('user_pin')
+    if 'user_id' not in session or session['user_id'] != 'ADMIN': 
+        return redirect(url_for('index'))
+    fname = request.form.get('fname')
+    lname = request.form.get('lname')
+    phone = request.form.get('phone_number')
+    email = request.form.get('email')
+    gender = request.form.get('gender')
+    plain_pin = request.form.get('user_pin')
     hashed_pin = generate_password_hash(plain_pin)
     try:
-        db = get_db(); cursor = db.cursor()
+        db = get_db()
+        cursor = db.cursor()
         cursor.execute("INSERT INTO users (fname, lname, phone_number, email, gender, user_pin) VALUES (%s, %s, %s, %s, %s, %s)", (fname, lname, phone, email, gender, hashed_pin))
-        db.commit(); cursor.close(); db.close()
+        db.commit()
+        cursor.close()
+        db.close()
         return redirect(url_for('admin_dashboard'))
-    except Exception as e: return f"Error adding user: {e}"
+    except Exception as e: 
+        return f"Error adding user: {e}"
 
 # Public signup logic
 @app.route('/signup', methods=['POST'])
 def signup():
-    fname = request.form.get('fname'); lname = request.form.get('lname'); phone = request.form.get('phone_number')
-    email = request.form.get('email'); gender = request.form.get('gender'); plain_pin = request.form.get('user_pin')
+    fname = request.form.get('fname')
+    lname = request.form.get('lname')
+    phone = request.form.get('phone_number')
+    email = request.form.get('email')
+    gender = request.form.get('gender')
+    plain_pin = request.form.get('user_pin')
     hashed_pin = generate_password_hash(plain_pin)
     try:
-        db = get_db(); cursor = db.cursor()
+        db = get_db()
+        cursor = db.cursor()
         cursor.execute("SELECT userId FROM users WHERE phone_number = %s", (phone,))
         if cursor.fetchone():
-            cursor.close(); db.close()
+            cursor.close()
+            db.close()
             return render_template('BusSeatReservationSystem(vs).html', error="Phone number already exists")
         cursor.execute("INSERT INTO users (fname, lname, phone_number, email, gender, user_pin) VALUES (%s, %s, %s, %s, %s, %s)", (fname, lname, phone, email, gender, hashed_pin))
-        db.commit(); cursor.close(); db.close()
+        db.commit()
+        cursor.close()
+        db.close()
         return redirect(url_for('index', success='true'))
-    except Exception as e: return render_template('BusSeatReservationSystem(vs).html', error="Signup failed.")
+    except Exception as e: 
+        return render_template('BusSeatReservationSystem(vs).html', error="Signup failed.")
 
 # Mark a specific booking as done
 @app.route('/complete_trip/<int:booking_id>')
 def complete_trip(booking_id):
-    if 'user_id' not in session or session['user_id'] != 'ADMIN': return redirect(url_for('index'))
+    if 'user_id' not in session or session['user_id'] != 'ADMIN': 
+        return redirect(url_for('index'))
     try:
-        db = get_db(); cursor = db.cursor()
+        db = get_db()
+        cursor = db.cursor()
         cursor.execute("UPDATE booking SET status = 'Completed' WHERE bookingId = %s", (booking_id,))
-        db.commit(); cursor.close(); db.close()
+        db.commit()
+        cursor.close()
+        db.close()
         return redirect(url_for('admin_dashboard'))
-    except Exception as e: return f"Update Error: {e}"
+    except Exception as e: 
+        return f"Update Error: {e}"
 
 # Handle the seat booking process (STK PUSH)
 @app.route('/process_booking', methods=['POST'])
 def process_booking():
-    if 'user_id' not in session: return redirect(url_for('index'))
+    if 'user_id' not in session: 
+        return redirect(url_for('index'))
+    
     user_id = session['user_id']
-    bus_id = request.form.get('busId'); seat_no = request.form.get('seatingno')
-    amount = request.form.get('amount_paid'); ticket_ref = str(uuid.uuid4())[:8].upper()
+    bus_id = request.form.get('busId')
+    seat_no = request.form.get('seatingno')
+    amount = request.form.get('amount_paid')
+    ticket_ref = str(uuid.uuid4())[:8].upper()
     phone = session.get('user_phone')
 
     if not phone:
@@ -274,7 +340,7 @@ def process_booking():
     try:
         access_token = get_access_token()
         if not access_token:
-            return "Error: Could not connect to Safaricom. Check your credentials or internet."
+            return "Error: Could not connect to Safaricom."
             
         timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
         password = generate_password(MPESA_SHORTCODE, MPESA_PASSKEY, timestamp)
@@ -296,15 +362,18 @@ def process_booking():
         }
 
         response = requests.post("https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest", json=payload, headers=headers)
-        print("M-Pesa Response:", response.json()) 
+        res_data = response.json()
+        checkout_id = res_data.get('CheckoutRequestID')
 
         db = get_db()
         cursor = db.cursor()
-        sql = """INSERT INTO booking (userId, busId, seatingno, amount_paid, ticket_ref, bookingdate, status) 
-                  VALUES (%s, %s, %s, %s, %s, %s, 'Pending')"""
-        cursor.execute(sql, (user_id, bus_id, seat_no, amount, ticket_ref, datetime.now()))
+        sql = """INSERT INTO booking (userId, busId, seatingno, amount_paid, ticket_ref, bookingdate, status, checkout_id) 
+                  VALUES (%s, %s, %s, %s, %s, %s, 'Pending', %s)"""
+        cursor.execute(sql, (user_id, bus_id, seat_no, amount, ticket_ref, datetime.now(), checkout_id))
         db.commit()
-        cursor.close(); db.close()
+        cursor.close()
+        db.close()
+        
         return redirect(url_for('main_page'))
     except Exception as e:
         return f"Booking Error: {e}"
@@ -312,27 +381,24 @@ def process_booking():
 @app.route('/callback', methods=['POST'])
 def mpesa_callback():
     data = request.get_json()
-    print("--- CALLBACK RECEIVED ---")
-    print(data)
-
     stk_callback = data.get('Body', {}).get('stkCallback', {})
     result_code = stk_callback.get('ResultCode')
+    checkout_id = stk_callback.get('CheckoutRequestID')
 
     if result_code == 0:
         try:
             db = get_db()
             cursor = db.cursor()
-            update_query = "UPDATE booking SET status = 'Completed' WHERE status = 'Pending' ORDER BY bookingdate DESC LIMIT 1"
-            cursor.execute(update_query)
+            update_query = "UPDATE booking SET status = 'Completed' WHERE checkout_id = %s"
+            cursor.execute(update_query, (checkout_id,))
             db.commit()
-            cursor.close(); db.close()
-            print("SUCCESS: Database updated to Completed!")
+            cursor.close()
+            db.close()
         except Exception as e:
             print(f"Database Callback Error: {e}")
 
     return jsonify({"ResultCode": 0, "ResultDesc": "Success"})
 
-# Clear session and go home
 @app.route('/signout')
 def signout():
     session.clear()
