@@ -15,26 +15,26 @@
     <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 
     <style>
-        /* Making the layout look clean and professional */
+        /* Giving the overall layout a clean, professional feel */
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8f9fa; }
         .admin-wrapper { display: flex; min-height: 100vh; }
         
-        /* Dark sidebar styling */
+        /* Styling the dark sidebar for a modern look */
         .sidebar { width: 280px; background: #000; color: white; padding: 40px 20px; display: flex; flex-direction: column; position: fixed; height: 100vh; z-index: 1000; }
         .sidebar h4 { font-weight: 700; margin-bottom: 40px; letter-spacing: -1px; }
         .nav-link { color: rgba(255,255,255,0.7); padding: 12px 15px; border-radius: 8px; margin-bottom: 10px; transition: 0.3s; text-decoration: none; cursor: pointer; }
         .nav-link:hover, .nav-link.active { background: rgba(255,255,255,0.1); color: white; }
         
-        /* Pushing content to the right so it doesn't hide behind sidebar */
+        /* Making sure the main content stays to the right of the fixed sidebar */
         .main-content { flex: 1; padding: 40px; margin-left: 280px; }
         
-        /* White cards for stats and tables */
+        /* Creating clean white cards for statistics and data tables */
         .stat-card { background: white; padding: 25px; border-radius: 15px; border: 1.5px solid #eee; transition: 0.3s; }
         .stat-card:hover { border-color: #000; transform: translateY(-5px); }
         .table-container { background: white; border-radius: 15px; padding: 20px; margin-top: 30px; border: 1.5px solid #eee; }
         .btn-black { background: #000; color: white; border-radius: 8px; padding: 10px 20px; border: none; }
         
-        /* Logic for switching between menu items */
+        /* Handling the visibility logic for different dashboard sections */
         .content-section { display: none; }
         .content-section.active { display: block; }
         
@@ -326,7 +326,7 @@
     let map;
     let mapInitialized = false;
 
-    // Setting up the Nairobi map and route
+    // Getting the Nairobi tracking map and route ready
     function initLeafletMap() {
         if (mapInitialized) return;
         
@@ -339,7 +339,7 @@
         const cbd = L.latLng(-1.2858, 36.8235);
         const knh = L.latLng(-1.3011, 36.8012);
 
-        // Drawing the line on the map
+        // Drawing the travel path clearly on the map
         L.Routing.control({
             waypoints: [cbd, knh],
             routeWhileDragging: false,
@@ -358,12 +358,14 @@
         mapInitialized = true;
     }
 
-    // Swapping sections when menu is clicked
+    // Logic for switching tabs when a menu item is clicked
     function showSection(sectionId) {
         document.querySelectorAll('.content-section').forEach(section => section.classList.remove('active'));
         document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
         document.getElementById(sectionId).classList.add('active');
         document.getElementById('nav-' + sectionId).classList.add('active');
+        
+        // If the routes section is opened, initialize the map and refresh its layout
         if (sectionId === 'routes') {
             initLeafletMap();
             setTimeout(() => { map.invalidateSize(); }, 200);

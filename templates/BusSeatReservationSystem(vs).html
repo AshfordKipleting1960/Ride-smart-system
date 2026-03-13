@@ -117,23 +117,25 @@
     </div>
 
     <script>
+        // Swapping between the login and signup views
         function toggleForms() {
             document.getElementById('loginForm').classList.toggle('hidden');
             document.getElementById('signupForm').classList.toggle('hidden');
         }
 
-        // --- THE FIX ---
-        // This function shows the UI message BUT allows the form to submit to Python
+        // --- SUCCESS ALERT ---
+        // Pop up the success message while letting the form finish its work with the Python backend
         function showSuccess() {
             document.getElementById('signupForm').classList.add('hidden');
             document.getElementById('successMessage').classList.remove('hidden');
-            // Form continues to submit naturally to your /signup route
+            // The form will now head over to your /signup route naturally
         }
 
         const loginPhone = document.getElementById('loginPhone');
         const loginPin = document.getElementById('loginPin');
         const loginSubmit = document.getElementById('loginSubmit');
 
+        // Keeping an eye on input to make sure everything looks right before enabling the button
         function validate() {
             const pValid = loginPhone.value.length === 10;
             const pinValid = loginPin.value.length === 4;
@@ -147,12 +149,15 @@
         loginPhone.addEventListener('input', validate);
         loginPin.addEventListener('input', validate);
 
+        // A list of nice things people have said to show on the side
         const testimonials = [
             {quote: '"Ride Smart has completely changed how I move around the city."', author: "Jane Wambui", role: "Daily Commuter, Nairobi"}, 
             {quote: '"Finally, a reliable way to book my seat before I even leave the house."', author: "David Maina", role: "Business Executive"}, 
             {quote: '"No more carrying exact change. The M-Pesa integration is seamless."', author: "Sarah Cherono", role: "University Student"}
         ];
         let idx = 0;
+        
+        // Let's cycle through those quotes every few seconds for a bit of life
         setInterval(() => {
             const container = document.getElementById('quoteContainer');
             if(!container) return;

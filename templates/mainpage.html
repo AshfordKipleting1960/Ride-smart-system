@@ -138,7 +138,7 @@
 
     <div class="bus-list-container" style="max-width: 900px; margin: 0 auto; padding-top: 20px;">
         {% for bus in buses %}
-            {% set my_booking = bookings | selectattr('busId', 'equalto', bus.busId) | selectattr('userId', 'equalto', session.get('user_id')) | list %}
+{% set my_booking = bookings | selectattr('busId', 'equalto', bus.busId) | selectattr('userId', 'equalto', session.get('user_id')) | selectattr('status', 'equalto', 'Completed') | list %}
 
             <div class="bus-card {% if my_booking %}booked-by-me{% endif %}">
                 <div class="d-flex justify-content-between align-items-center mb-2">
