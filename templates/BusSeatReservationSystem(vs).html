@@ -4,12 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ride Smart - Access</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <style>
-        body, html { height: 100%; margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; }
-        .split-container { display: flex; height: 100vh; width: 90%; }
+        :root {
+            --brand-black: #000000;
+            --brand-muted: #999999;
+        }
+
+        body, html { 
+            height: 100%; 
+            margin: 0; 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            font-size: 14px; /* Admin/Main page base size */
+            overflow-x: hidden; 
+            letter-spacing: -0.01em;
+        }
+
+        .split-container { display: flex; height: 100vh; width: 100%; }
+        
         .side-image { 
             flex: 1; 
             background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&q=80&w=2017'); 
@@ -21,13 +35,61 @@
             padding: 60px; 
             color: white; 
         }
+
         .quote-box { transition: opacity 0.8s ease-in-out; min-height: 150px; }
+        
         .side-form { flex: 1; display: flex; align-items: center; justify-content: center; background: white; padding: 40px; position: relative; }
         .form-content { width: 100%; max-width: 410px; transition: all 0.3s ease; }
         
-        .form-control, .form-select { height: 50px; border: 1.5px solid #eee; border-radius: 10px; margin-bottom: 5px; font-size: 0.95rem; }
+        /* Heading Styles */
+        h2.fw-bold { 
+            font-size: 1.75rem; 
+            letter-spacing: -0.04em; 
+            font-weight: 800 !important;
+            margin-bottom: 8px;
+        }
+
+        .text-muted { font-size: 14px; }
+
+        /* Input Styles */
+        .form-control, .form-select { 
+            height: 52px; 
+            border: 1.5px solid #eee; 
+            border-radius: 10px; 
+            margin-bottom: 5px; 
+            font-size: 14px; 
+            font-weight: 500;
+        }
+
+        .form-control::placeholder { color: #ccc; font-weight: 400; }
+
+        /* Label and Hint Styles (Admin Style) */
+        .security-spacer p.small, .validation-hint { 
+            font-size: 11px !important; 
+            font-weight: 800; 
+            text-transform: uppercase; 
+            letter-spacing: 0.05em;
+        }
+
         .security-spacer { margin-top: 25px; border-top: 1px solid #f8f8f8; padding-top: 15px; }
-        .btn-black { background: #000; color: white; height: 60px; width: 100%; border-radius: 10px; font-weight: 600; margin-top: 10px; border: none; }
+
+        /* Button Styles */
+        .btn-black { 
+            background: #000; 
+            color: white; 
+            height: 55px; 
+            width: 100%; 
+            border-radius: 10px; 
+            font-weight: 800; 
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+            margin-top: 10px; 
+            border: none; 
+            transition: opacity 0.2s;
+        }
+
+        .btn-black:disabled { opacity: 0.6; cursor: not-allowed; }
         
         .hidden { display: none !important; } 
         
@@ -43,11 +105,21 @@
             z-index: 1000;
             padding: 40px;
         }
+
         .success-icon { font-size: 4rem; color: #198754; margin-bottom: 20px; }
 
-        .validation-hint { font-size: 0.75rem; margin-bottom: 12px; font-weight: 600; display: flex; align-items: center; gap: 5px; }
+        .validation-hint { margin-bottom: 12px; display: flex; align-items: center; gap: 5px; }
         .text-invalid { color: #dc3545; }
         .text-valid { color: #198754; }
+
+        .error-text { 
+            font-size: 11px; 
+            font-weight: 700; 
+            color: #dc3545; 
+            display: block; 
+            margin-bottom: 10px; 
+            text-transform: uppercase; 
+        }
 
         @media (max-width: 992px) { .side-image { display: none; } }
     </style>
@@ -56,9 +128,9 @@
     <div class="split-container">
         <div class="side-image">
             <div id="quoteContainer" class="quote-box">
-                <p id="dynamicQuote" style="font-size: 1.5rem; font-weight: 500;">"Ride Smart has completely changed how I move around the city."</p>
-                <p id="dynamicAuthor" class="fw-bold mb-0">Jane Wambui</p>
-                <p id="dynamicRole" class="small opacity-75">Daily Commuter, Nairobi</p>
+                <p id="dynamicQuote" style="font-size: 1.6rem; font-weight: 700; letter-spacing: -0.03em;">"Ride Smart has completely changed how I move around the city."</p>
+                <p id="dynamicAuthor" class="fw-bold mb-0" style="font-size: 14px;">Jane Wambui</p>
+                <p id="dynamicRole" class="opacity-75" style="font-size: 12px;">Daily Commuter, Nairobi</p>
             </div>
         </div>
 
@@ -86,7 +158,7 @@
                     
                     <button type="submit" id="loginSubmit" class="btn btn-black" disabled>Sign in</button>
                 </form>
-                <p class="text-center mt-4 small">New here? <a href="javascript:void(0)" onclick="toggleForms()" class="text-dark fw-bold">Create account</a></p>
+                <p class="text-center mt-4" style="font-size: 13px;">New here? <a href="javascript:void(0)" onclick="toggleForms()" class="text-dark fw-bold">Create account</a></p>
             </div>
 
             <div id="signupForm" class="form-content hidden">
@@ -106,36 +178,31 @@
                         <option value="Other">Other</option>
                     </select>
                     <div class="security-spacer">
-                        <p class="small text-muted mb-2 fw-bold" style="letter-spacing: 1px; text-transform: uppercase; font-size: 0.7rem;">Account Security</p>
+                        <p class="small text-muted mb-2 fw-bold">Account Security</p>
                         <input type="password" name="user_pin" class="form-control" placeholder="Set 4-Digit PIN" maxlength="4" required>
                     </div>
                     <button type="submit" class="btn btn-black">Create account</button>
                 </form>
-                <p class="text-center mt-4 small">Already have an account? <a href="javascript:void(0)" onclick="toggleForms()" class="text-dark fw-bold">Sign in</a></p>
+                <p class="text-center mt-4" style="font-size: 13px;">Already have an account? <a href="javascript:void(0)" onclick="toggleForms()" class="text-dark fw-bold">Sign in</a></p>
             </div>
         </div>
     </div>
 
     <script>
-        // Swapping between the login and signup views
         function toggleForms() {
             document.getElementById('loginForm').classList.toggle('hidden');
             document.getElementById('signupForm').classList.toggle('hidden');
         }
 
-        // --- SUCCESS ALERT ---
-        // Pop up the success message while letting the form finish its work with the Python backend
         function showSuccess() {
             document.getElementById('signupForm').classList.add('hidden');
             document.getElementById('successMessage').classList.remove('hidden');
-            // The form will now head over to your /signup route naturally
         }
 
         const loginPhone = document.getElementById('loginPhone');
         const loginPin = document.getElementById('loginPin');
         const loginSubmit = document.getElementById('loginSubmit');
 
-        // Keeping an eye on input to make sure everything looks right before enabling the button
         function validate() {
             const pValid = loginPhone.value.length === 10;
             const pinValid = loginPin.value.length === 4;
@@ -149,7 +216,6 @@
         loginPhone.addEventListener('input', validate);
         loginPin.addEventListener('input', validate);
 
-        // A list of nice things people have said to show on the side
         const testimonials = [
             {quote: '"Ride Smart has completely changed how I move around the city."', author: "Jane Wambui", role: "Daily Commuter, Nairobi"}, 
             {quote: '"Finally, a reliable way to book my seat before I even leave the house."', author: "David Maina", role: "Business Executive"}, 
@@ -157,7 +223,6 @@
         ];
         let idx = 0;
         
-        // Let's cycle through those quotes every few seconds for a bit of life
         setInterval(() => {
             const container = document.getElementById('quoteContainer');
             if(!container) return;
