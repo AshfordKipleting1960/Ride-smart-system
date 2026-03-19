@@ -4,46 +4,152 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ride Smart Admin - Dashboard</title>
+    
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
     <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 
-    <style>
-        /* Giving the overall layout a clean, professional feel */
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8f9fa; }
-        .admin-wrapper { display: flex; min-height: 100vh; }
-        
-        /* Styling the dark sidebar for a modern look */
-        .sidebar { width: 280px; background: #000; color: white; padding: 40px 20px; display: flex; flex-direction: column; position: fixed; height: 100vh; z-index: 1000; }
-        .sidebar h4 { font-weight: 700; margin-bottom: 40px; letter-spacing: -1px; }
-        .nav-link { color: rgba(255,255,255,0.7); padding: 12px 15px; border-radius: 8px; margin-bottom: 10px; transition: 0.3s; text-decoration: none; cursor: pointer; }
-        .nav-link:hover, .nav-link.active { background: rgba(255,255,255,0.1); color: white; }
-        
-        /* Making sure the main content stays to the right of the fixed sidebar */
-        .main-content { flex: 1; padding: 40px; margin-left: 280px; }
-        
-        /* Creating clean white cards for statistics and data tables */
-        .stat-card { background: white; padding: 25px; border-radius: 15px; border: 1.5px solid #eee; transition: 0.3s; }
-        .stat-card:hover { border-color: #000; transform: translateY(-5px); }
-        .table-container { background: white; border-radius: 15px; padding: 20px; margin-top: 30px; border: 1.5px solid #eee; }
-        .btn-black { background: #000; color: white; border-radius: 8px; padding: 10px 20px; border: none; }
-        
-        /* Handling the visibility logic for different dashboard sections */
-        .content-section { display: none; }
-        .content-section.active { display: block; }
-        
-        #leafletMap { height: 400px; width: 100%; border-radius: 15px; z-index: 1; }
-        
-        .route-info-panel { background: #fdfdfd; border-radius: 12px; padding: 20px; border-left: 4px solid #000; }
-        .bus-tag { background: #eee; padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; display: inline-block; margin-right: 5px; }
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
 
-        .leaflet-routing-container { display: none; }
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+            /* Reduced global font size from default 16px to 13.5px */
+            font-size: 0.85rem; 
+        }
+
+        .admin-wrapper {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px; /* Slimmed down sidebar slightly */
+            background: #000;
+            color: white;
+            padding: 30px 15px;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            z-index: 1000;
+        }
+
+        .sidebar h4 {
+            font-size: 1.1rem; /* Smaller branding text */
+            font-weight: 700;
+            margin-bottom: 30px;
+            letter-spacing: -0.5px;
+        }
+
+        .nav-link {
+            color: rgba(255, 255, 255, 0.7);
+            padding: 10px 12px;
+            border-radius: 6px;
+            margin-bottom: 5px;
+            transition: 0.3s;
+            text-decoration: none;
+            cursor: pointer;
+            display: block;
+            font-size: 0.85rem; /* Smaller nav links */
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            margin-left: 250px;
+        }
+
+        h2.fw-bold {
+            font-size: 1.4rem; /* Smaller section titles */
+        }
+
+        .stat-card {
+            background: white;
+            padding: 18px;
+            border-radius: 12px;
+            border: 1.2px solid #eee;
+            transition: 0.3s;
+        }
+
+        .stat-card h3 {
+            font-size: 1.25rem; /* Smaller stat numbers */
+        }
+
+        .stat-card p {
+            font-size: 0.7rem; /* Tiny labels */
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 25px;
+            border: 1.2px solid #eee;
+        }
+
+        .table {
+            font-size: 0.8rem; /* Smaller table data */
+        }
+
+        .btn-black {
+            background: #000;
+            color: white;
+            border-radius: 6px;
+            padding: 8px 16px;
+            border: none;
+            font-size: 0.8rem;
+        }
+
+        .badge {
+            font-size: 0.7rem; /* Smaller badges */
+        }
+
+        .content-section {
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        #leafletMap {
+            height: 350px;
+            width: 100%;
+            border-radius: 12px;
+            z-index: 1;
+        }
+
+        .route-info-panel h5 {
+            font-size: 0.9rem;
+        }
+
+        .bus-tag {
+            background: #eee;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-block;
+            margin-right: 5px;
+        }
+
+        .leaflet-routing-container {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -55,6 +161,7 @@
         <a onclick="showSection('fleet')" id="nav-fleet" class="nav-link">Fleet Management</a>
         <a onclick="showSection('routes')" id="nav-routes" class="nav-link">Routes & Map</a>
         <a onclick="showSection('reports')" id="nav-reports" class="nav-link">Booking Reports</a>
+        
         <div class="mt-auto">
             <a href="/signout" class="nav-link text-danger">Sign Out</a>
         </div>
@@ -67,7 +174,7 @@
                 <button class="btn btn-black" data-bs-toggle="modal" data-bs-target="#addUserModal">+ Add New Passenger</button>
             </div>
 
-            <div class="row g-4">
+            <div class="row g-3">
                 <div class="col-md-3">
                     <div class="stat-card">
                         <p class="text-muted small fw-bold text-uppercase mb-1">Active Buses</p>
@@ -89,19 +196,13 @@
                 <div class="col-md-3">
                     <div class="stat-card">
                         <p class="text-muted small fw-bold text-uppercase mb-1">Revenue (KES)</p>
-                        <h3 class="fw-bold mb-0">
-                            {% if total_revenue %}
-                                {{ "{:,.2f}".format(total_revenue) }}
-                            {% else %}
-                                0.00
-                            {% endif %}
-                        </h3>
+                        <h3 class="fw-bold mb-0">{% if total_revenue %}{{ "{:,.2f}".format(total_revenue) }}{% else %}0.00{% endif %}</h3>
                     </div>
                 </div>
             </div>
 
             <div class="table-container">
-                <h5 class="fw-bold mb-4">Passenger Registrations</h5>
+                <h6 class="fw-bold mb-3">Passenger Registrations</h6>
                 <table class="table align-middle">
                     <thead class="table-light">
                         <tr>
@@ -119,9 +220,7 @@
                             <td>{{ user[1] }} {{ user[2] }}</td>
                             <td>{{ user[3] }}</td>
                             <td><span class="badge bg-dark">Passenger</span></td>
-                            <td>
-                                <a href="/delete_user/{{ user[0] }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure?')">Remove</a>
-                            </td>
+                            <td><a href="/delete_user/{{ user[0] }}" class="btn btn-sm btn-outline-danger" style="font-size: 0.7rem;">Remove</a></td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -136,55 +235,31 @@
             </div>
 
             {% for bus in all_buses %}
-            <div class="table-container mb-5">
-                <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="table-container mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
                     <div>
-                        <h5 class="fw-bold mb-0">Bus #{{ bus.busId }} ({{ bus.plateno }})</h5>
-                        <small class="text-muted">Total Capacity: {{ bus.totalcapacity }} seats</small>
-                        <div class="mt-1">
-                            {% set active_p = [] %}
-                            {% for p in bus_passengers %}{% if p.busId == bus.busId %}{% set _ = active_p.append(p) %}{% endif %}{% endfor %}
-                            
-                            {% if active_p|length > 0 %}
-                                <span class="badge bg-primary">In Transit</span>
-                            {% else %}
-                                <span class="badge bg-secondary">At Terminal (Empty)</span>
-                            {% endif %}
-                        </div>
+                        <h6 class="fw-bold mb-0">Bus #{{ bus.busId }} ({{ bus.plateno }})</h6>
+                        <small class="text-muted" style="font-size: 0.7rem;">Capacity: {{ bus.totalcapacity }} seats</small>
                     </div>
                     <div class="d-flex gap-2">
-                        <a href="/finish_trip/{{ bus.busId }}" class="btn btn-sm btn-success" onclick="return confirm('Clear all bookings for this bus?')">
-                            <i class="bi bi-check-circle me-1"></i> Arrived
-                        </a>
-                        <a href="/delete_bus/{{ bus.busId }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete bus from fleet?')">
-                            <i class="bi bi-trash"></i>
-                        </a>
+                        <a href="/finish_trip/{{ bus.busId }}" class="btn btn-sm btn-success" style="font-size: 0.7rem;">Arrived</a>
+                        <a href="/delete_bus/{{ bus.busId }}" class="btn btn-sm btn-outline-danger" style="font-size: 0.7rem;">Delete</a>
                     </div>
                 </div>
                 <table class="table align-middle">
                     <thead class="table-light">
-                        <tr>
-                            <th>Seat No</th>
-                            <th>Passenger Name</th>
-                            <th>Booking Date</th>
-                            <th>Status</th>
-                        </tr>
+                        <tr><th>Seat No</th><th>Passenger Name</th><th>Status</th></tr>
                     </thead>
                     <tbody>
-                        {% if active_p|length > 0 %}
-                            {% for p in active_p %}
-                                <tr>
-                                    <td><span class="fw-bold text-primary">{{ p.seatingno }}</span></td>
-                                    <td>{{ p.fname }} {{ p.lname }}</td>
-                                    <td>{{ p.bookingdate if p.bookingdate else 'N/A' }}</td>
-                                    <td><span class="badge bg-success">On Board</span></td>
-                                </tr>
-                            {% endfor %}
-                        {% else %}
-                            <tr>
-                                <td colspan="4" class="text-center text-muted py-4">No active passengers on this bus.</td>
-                            </tr>
-                        {% endif %}
+                        {% set found = false %}
+                        {% for p in bus_passengers %}{% if p.busId == bus.busId %}
+                        <tr>
+                            <td><span class="fw-bold text-primary">{{ p.seatingno }}</span></td>
+                            <td>{{ p.fname }} {{ p.lname }}</td>
+                            <td><span class="badge bg-success">On Board</span></td>
+                        </tr>
+                        {% set found = true %}{% endif %}{% endfor %}
+                        {% if not found %}<tr><td colspan="3" class="text-center text-muted py-2">No active passengers</td></tr>{% endif %}
                     </tbody>
                 </table>
             </div>
@@ -192,37 +267,17 @@
         </div>
 
         <div id="routes" class="content-section">
-            <h2 class="fw-bold mb-4">Live Routes & Tracking</h2>
-            <div class="row g-4">
-                <div class="col-lg-8">
-                    <div class="table-container">
-                        <h5 class="fw-bold mb-3">Nairobi Corridor: CBD ↔ KNH</h5>
-                        <div id="leafletMap"></div>
-                    </div>
-                </div>
+            <h2 class="fw-bold mb-4">Live Tracking</h2>
+            <div class="row g-3">
+                <div class="col-lg-8"><div class="table-container"><div id="leafletMap"></div></div></div>
                 <div class="col-lg-4">
                     <div class="table-container h-100">
-                        <h5 class="fw-bold mb-4">Route Details</h5>
+                        <h6 class="fw-bold mb-3">Route Details</h6>
                         <div class="route-info-panel mb-4">
-                            <p class="text-muted small fw-bold text-uppercase mb-2">Assigned Fleet</p>
+                            <p class="text-muted small fw-bold text-uppercase mb-2" style="font-size: 0.65rem;">Fleet</p>
                             <div class="d-flex flex-wrap gap-2">
-                                {% if all_buses %}
-                                    {% for bus in all_buses %}
-                                        <span class="bus-tag"><i class="bi bi-bus-front me-1"></i>{{ bus.plateno }}</span>
-                                    {% endfor %}
-                                {% else %}
-                                    <span class="text-muted small">No buses assigned</span>
-                                {% endif %}
+                                {% for bus in all_buses %}<span class="bus-tag">{{ bus.plateno }}</span>{% endfor %}
                             </div>
-                        </div>
-                        <div class="route-info-panel">
-                            <p class="text-muted small fw-bold text-uppercase mb-2">Key Stops</p>
-                            <ul class="list-unstyled mb-0">
-                                <li class="mb-2"><i class="bi bi-geo-alt-fill text-danger me-2"></i>CBD Terminal</li>
-                                <li class="mb-2"><i class="bi bi-record-circle me-2"></i>Valley Road</li>
-                                <li class="mb-2"><i class="bi bi-record-circle me-2"></i>Ngong Road</li>
-                                <li><i class="bi bi-geo-alt-fill text-success me-2"></i>KNH Stage</li>
-                            </ul>
                         </div>
                     </div>
                 </div>
@@ -230,16 +285,23 @@
         </div>
 
         <div id="reports" class="content-section">
-            <h2 class="fw-bold mb-4">Booking & Revenue Reports</h2>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold">Booking Reports</h2>
+                <button onclick="exportToExcel()" class="btn btn-success" style="font-size: 0.8rem;">Export Excel</button>
+            </div>
+
             <div class="table-container">
-                <table class="table align-middle">
+                <div class="mb-3">
+                    <input type="text" id="reportSearch" class="form-control w-25" placeholder="Filter table..." onkeyup="filterReports()" style="font-size: 0.8rem;">
+                </div>
+                <table class="table align-middle" id="reportsTable">
                     <thead class="table-light">
                         <tr>
-                            <th>Date</th>
-                            <th>Passenger</th>
+                            <th onclick="sortTable(0)" style="cursor:pointer">Date</th>
+                            <th onclick="sortTable(1)" style="cursor:pointer">Passenger</th>
                             <th>Seat</th>
                             <th>Bus ID</th>
-                            <th>Amount Paid</th>
+                            <th onclick="sortTable(4)" style="cursor:pointer">Amount</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -249,14 +311,7 @@
                             <td>{{ report.fname }} {{ report.lname }}</td>
                             <td><span class="badge bg-dark">{{ report.seatingno }}</span></td>
                             <td>#{{ report.busId }}</td>
-                            <td class="fw-bold text-success">
-                                KES 
-                                {% if report.amount_paid %}
-                                    {{ "{:,.2f}".format(report.amount_paid) }}
-                                {% else %}
-                                    0.00
-                                {% endif %}
-                            </td>
+                            <td class="fw-bold text-success">KES {{ "{:,.2f}".format(report.amount_paid) if report.amount_paid else '0.00' }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -266,111 +321,61 @@
     </div>
 </div>
 
-<div class="modal fade" id="addBusModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content" style="border-radius: 15px;">
-            <div class="modal-header">
-                <h5 class="fw-bold">Register New Bus</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form action="/add_bus" method="POST">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="small fw-bold">Plate Number</label>
-                        <input type="text" name="plateno" class="form-control" placeholder="KDD 123X" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="small fw-bold">Seating Capacity</label>
-                        <input type="number" name="capacity" class="form-control" value="14" required>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-black w-100">Save to Fleet</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="addUserModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content" style="border-radius: 15px;">
-            <div class="modal-header">
-                <h5 class="fw-bold">Add New Passenger</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form action="/add_user" method="POST">
-                <div class="modal-body">
-                    <div class="mb-3"><input type="text" name="fname" class="form-control" placeholder="First Name" required></div>
-                    <div class="mb-3"><input type="text" name="lname" class="form-control" placeholder="Last Name" required></div>
-                    <div class="mb-3"><input type="text" name="phone_number" class="form-control" placeholder="Phone Number" required></div>
-                    <div class="mb-3"><input type="email" name="email" class="form-control" placeholder="Email" required></div>
-                    <div class="mb-3">
-                        <select name="gender" class="form-select">
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
-                        </select>
-                    </div>
-                    <div class="mb-3"><input type="password" name="user_pin" class="form-control" placeholder="User PIN" required></div>
-                </div>
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-black w-100">Save Passenger</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
 <script>
     let map;
     let mapInitialized = false;
 
-    // Getting the Nairobi tracking map and route ready
-    function initLeafletMap() {
+    function showSection(id) {
+        document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        document.getElementById('nav-' + id).classList.add('active');
+        if (id === 'routes') initMap();
+    }
+
+    function initMap() {
         if (mapInitialized) return;
-        
         map = L.map('leafletMap').setView([-1.294, 36.812], 14);
-        
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
-
-        const cbd = L.latLng(-1.2858, 36.8235);
-        const knh = L.latLng(-1.3011, 36.8012);
-
-        // Drawing the travel path clearly on the map
-        L.Routing.control({
-            waypoints: [cbd, knh],
-            routeWhileDragging: false,
-            addWaypoints: false,
-            draggableWaypoints: false,
-            fitSelectedRoutes: true,
-            lineOptions: {
-                styles: [{ color: 'black', opacity: 0.8, weight: 6 }]
-            },
-            createMarker: function(i, wp, n) {
-                const markerText = (i === 0) ? "CBD Terminal" : "KNH Stage";
-                return L.marker(wp.latLng).bindPopup(markerText);
-            }
-        }).addTo(map);
-
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
         mapInitialized = true;
     }
 
-    // Logic for switching tabs when a menu item is clicked
-    function showSection(sectionId) {
-        document.querySelectorAll('.content-section').forEach(section => section.classList.remove('active'));
-        document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
-        document.getElementById(sectionId).classList.add('active');
-        document.getElementById('nav-' + sectionId).classList.add('active');
-        
-        // If the routes section is opened, initialize the map and refresh its layout
-        if (sectionId === 'routes') {
-            initLeafletMap();
-            setTimeout(() => { map.invalidateSize(); }, 200);
+    function exportToExcel() {
+        const table = document.getElementById("reportsTable");
+        const wb = XLSX.utils.table_to_book(table, { sheet: "Reports" });
+        XLSX.writeFile(wb, "Reports.xlsx");
+    }
+
+    function filterReports() {
+        let input = document.getElementById("reportSearch").value.toUpperCase();
+        let rows = document.getElementById("reportsTable").getElementsByTagName("tr");
+        for (let i = 1; i < rows.length; i++) {
+            rows[i].style.display = rows[i].innerText.toUpperCase().includes(input) ? "" : "none";
+        }
+    }
+
+    function sortTable(n) {
+        let table = document.getElementById("reportsTable");
+        let switching = true, i, x, y, shouldSwitch, dir = "asc", switchcount = 0;
+        while (switching) {
+            switching = false;
+            let rows = table.rows;
+            for (i = 1; i < (rows.length - 1); i++) {
+                shouldSwitch = false;
+                x = rows[i].getElementsByTagName("TD")[n];
+                y = rows[i + 1].getElementsByTagName("TD")[n];
+                if (dir == "asc" && x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) { shouldSwitch = true; break; }
+                if (dir == "desc" && x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) { shouldSwitch = true; break; }
+            }
+            if (shouldSwitch) {
+                rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                switching = true; switchcount++;
+            } else if (switchcount == 0 && dir == "asc") { dir = "desc"; switching = true; }
         }
     }
 </script>
+
 </body>
 </html>
