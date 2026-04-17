@@ -161,188 +161,202 @@
 
 <div class="container py-5">
     <div class="search-card" style="max-width: 900px; margin-left: auto; margin-right: auto;">
-        <form class="row g-3">
+        <form class="row g-3" action="/main_page" method="GET">
             <div class="col-md-5">
                 <label class="form-label">Pickup Point</label>
-                <select class="form-select" id="pickupSelect" onchange="syncRouteLabels()">
-                    <option value="Kencom / CBD">Kencom / CBD</option>
-                    <option value="KNH (Hospital)" selected>KNH (Hospital)</option>
-                    <option value="Westlands">Westlands</option>
-                    <option value="Utawala">Utawala</option>
+                <select class="form-select" id="pickupSelect" name="pickup" required>
+                    <option value="" disabled {% if not request.args.get('pickup') %}selected{% endif %}>Select Pickup</option>
+                    <option value="Kencom / CBD" {% if request.args.get('pickup') == 'Kencom / CBD' %}selected{% endif %}>Kencom / CBD</option>
+                    <option value="KNH (Hospital)" {% if request.args.get('pickup') == 'KNH (Hospital)' %}selected{% endif %}>KNH (Hospital)</option>
+                    <option value="Westlands" {% if request.args.get('pickup') == 'Westlands' %}selected{% endif %}>Westlands</option>
+                    <option value="Utawala" {% if request.args.get('pickup') == 'Utawala' %}selected{% endif %}>Utawala</option>
                 </select>
             </div>
             <div class="col-md-5">
                 <label class="form-label">Destination</label>
-                <select class="form-select" id="destSelect" onchange="syncRouteLabels()">
-                    <option value="Ngong Road">Ngong Road</option>
-                    <option value="Kawangware">Kawangware</option>
-                    <option value="Kasarani">Kasarani</option>
-                    <option value="CBD / Ambassadeur" selected>CBD / Ambassadeur</option>
+                <select class="form-select" id="destSelect" name="destination" required>
+                    <option value="" disabled {% if not request.args.get('destination') %}selected{% endif %}>Select Destination</option>
+                    <option value="Ngong Road" {% if request.args.get('destination') == 'Ngong Road' %}selected{% endif %}>Ngong Road</option>
+                    <option value="Kawangware" {% if request.args.get('destination') == 'Kawangware' %}selected{% endif %}>Kawangware</option>
+                    <option value="Kasarani" {% if request.args.get('destination') == 'Kasarani' %}selected{% endif %}>Kasarani</option>
+                    <option value="CBD / Ambassadeur" {% if request.args.get('destination') == 'CBD / Ambassadeur' %}selected{% endif %}>CBD / Ambassadeur</option>
                 </select>
             </div>
             <div class="col-md-2 d-flex align-items-end">
-                <button type="button" class="btn btn-dark w-100 py-2 fw-bold">Search</button>
+                <button type="submit" class="btn btn-dark w-100 py-2 fw-bold">Search</button>
             </div>
         </form>
     </div>
 
     <div class="bus-list-container" style="max-width: 900px; margin: 0 auto; padding-top: 20px;">
-        {% for bus in buses %}
-            {% set my_booking = bookings | selectattr('busId', 'equalto', bus.busId) | selectattr('userId', 'equalto', session.get('user_id')) | list %}
+        {% if buses %}
+            {% for bus in buses %}
+                {% set my_booking = bookings | selectattr('busId', 'equalto', bus.busId) | list %}
 
-            <div class="bus-card {% if my_booking %}booked-by-me{% endif %}">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span class="fw-800 text-muted small uppercase">CITY HOPPA • {{ bus.plateno }}</span>
-                    {% if my_booking %}
-                        <button class="btn btn-warning btn-sm fw-bold px-3" data-bs-toggle="modal" data-bs-target="#ticketModal{{ bus.busId }}">
-                            <i class="bi bi-ticket-perforated me-2"></i>VIEW TICKET
-                        </button>
-                    {% else %}
-                        <span class="badge bg-success px-3" style="font-size: 10px; font-weight: 800;">AVAILABLE</span>
-                    {% endif %}
-                </div>
-
-                <div class="route-visual">
-                    <div class="text-start">
-                        <div class="time-big">07:35</div>
-                        <div class="loc-small cardPickup">KNH (Hospital)</div>
-                    </div>
-                    <div class="connector"></div>
-                    <div class="text-end">
-                        <div class="time-big">08:15</div>
-                        <div class="loc-small cardDest">CBD / Ambassadeur</div>
-                    </div>
-                </div>
-
-                <div class="d-flex justify-content-between align-items-end">
-                    <div>
-                        <div class="price-text fw-bold">KES 50.00</div>
-                        {% set taken_count = bookings | selectattr('busId', 'equalto', bus.busId) | list | length %}
-                        <div class="text-muted small fw-bold" style="font-size: 11px;">CAPACITY: {{ bus.totalcapacity - taken_count }} / {{ bus.totalcapacity }} LEFT</div>
-                    </div>
-
-                    {% if my_booking %}
-                        <div class="text-end">
-                            <span class="text-success fw-bold d-block" style="font-size: 12px;">CONFIRMED (Seat {{ my_booking[0].seatingno }})</span>
-                            <a href="javascript:void(0)" class="cancel-link" onclick="triggerCancelModal('/cancel_booking/{{ my_booking[0].bookingId }}')">Cancel Booking</a>
-                        </div>
-                    {% else %}
-                        <button class="btn btn-dark px-5 py-2 fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ bus.busId }}">
-                            Select Seat
-                        </button>
-                    {% endif %}
-                </div>
-
-                <div class="collapse" id="collapse{{ bus.busId }}">
-                    <div class="interior-container">
-                        <div class="seat-legend">
-                            <div class="legend-item"><div class="legend-box" style="background: white;"></div> Available</div>
-                            <div class="legend-item"><div class="legend-box" style="background: #f39c12; border:none;"></div> Taken</div>
-                            <div class="legend-item"><div class="legend-box" style="background: black; border:none;"></div> Your Choice</div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-lg-7 text-center">
-                                <div class="bus-frame shadow-sm">
-                                    <div class="seat-grid">
-                                        {% set total_seats = bus.totalcapacity | int %}
-                                        {% set num_rows = (total_seats / 4) | round(0, 'ceil') | int %}
-                                        {% set count = namespace(value=0) %}
-
-                                        {% for row_num in range(1, num_rows + 1) %}
-                                            <div class="row-id">{{ row_num }}</div>
-                                            {% for col_char in ['A', 'B', 'C', 'D'] %}
-                                                {% if count.value < total_seats %}
-                                                    {% if col_char == 'C' %}<div class="aisle-space"></div>{% endif %}
-                                                    {% set s_id = row_num | string + col_char %}
-                                                    {% set is_taken = bookings | selectattr('busId', 'equalto', bus.busId) | selectattr('seatingno', 'equalto', s_id) | list %}
-                                                    <div class="seat {% if is_taken %}occupied{% endif %}" onclick="selectSeat(this, '{{ s_id }}', '{{ bus.busId }}')">
-                                                        {{ s_id }}
-                                                    </div>
-                                                    {% set count.value = count.value + 1 %}
-                                                {% else %}
-                                                    {% if col_char == 'C' %}<div class="aisle-space"></div>{% endif %}
-                                                    <div class="empty-space"></div>
-                                                {% endif %}
-                                            {% endfor %}
-                                        {% endfor %}
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-lg-5">
-                                <div class="summary-panel h-100 d-flex flex-column justify-content-center">
-                                    <h6 class="fw-800 text-muted uppercase small mb-4">Confirm Selection</h6>
-                                    <div class="mb-3">
-                                        <label class="text-muted small d-block">PASSENGER</label>
-                                        <span class="fw-bold" style="font-size: 14px;">{{ user_name }}</span>
-                                    </div>
-                                    <div class="mb-4">
-                                        <label class="text-muted small d-block">SELECTED SEAT</label>
-                                        <span id="displaySeat{{ bus.busId }}" class="fw-bold text-success fs-5">—</span>
-                                    </div>
-                                    <button class="btn-confirm" id="btn{{ bus.busId }}" disabled data-bs-toggle="modal" data-bs-target="#paymentModal{{ bus.busId }}">
-                                        Proceed to Payment
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="modal fade" id="paymentModal{{ bus.busId }}" tabindex="-1">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content text-center p-5 border-0" style="border-radius:25px;">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/1/15/M-PESA_LOGO-01.svg" width="100" class="mb-4 mx-auto">
-                        <h5 class="fw-800" style="letter-spacing: -0.02em;">M-Pesa Checkout</h5>
-                        <p class="text-muted small">Confirm payment of <strong>KES 50.00</strong> for Seat <strong class="pay-seat-text text-dark"></strong>.</p>
-                        <form action="/process_booking" method="POST" onsubmit="showProcessingModal('{{ bus.busId }}')">
-                            <input type="hidden" name="seatingno" class="pay-seat-input">
-                            <input type="hidden" name="busId" value="{{ bus.busId }}">
-                            <input type="hidden" name="amount_paid" value="50.00">
-                            <button type="submit" class="btn btn-success w-100 py-3 fw-bold mt-3 text-uppercase" style="border-radius:12px; background-color: #198754; border: none; font-size: 14px;">
-                                PAY NOW
+                <div class="bus-card {% if my_booking %}booked-by-me{% endif %}">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="fw-800 text-muted small uppercase">CITY HOPPA • {{ bus.plateno }}</span>
+                        {% if my_booking %}
+                            <button class="btn btn-warning btn-sm fw-bold px-3" data-bs-toggle="modal" data-bs-target="#ticketModal{{ bus.busId }}">
+                                <i class="bi bi-ticket-perforated me-2"></i>VIEW TICKET
                             </button>
-                        </form>
+                        {% else %}
+                            <span class="badge bg-success px-3" style="font-size: 10px; font-weight: 800;">AVAILABLE</span>
+                        {% endif %}
                     </div>
-                </div>
-            </div>
 
-            <div class="modal fade" id="processingModal{{ bus.busId }}" data-bs-backdrop="static" tabindex="-1">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content text-center p-5 border-0" style="border-radius:25px;">
-                        <div class="spinner-border text-success mb-4" role="status" style="width: 3rem; height: 3rem;"></div>
-                        <h5 class="fw-800">Awaiting Confirmation</h5>
-                        <p class="text-muted">Please enter your <strong>M-Pesa PIN</strong> on the prompt sent to your phone.</p>
-                    </div>
-                </div>
-            </div>
-
-            {% if my_booking %}
-            <div class="modal fade" id="ticketModal{{ bus.busId }}" tabindex="-1">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content p-4 text-center border-0">
-                        <div id="captureArea{{ bus.busId }}" class="ticket-design">
-                            <h6 class="fw-800 text-muted uppercase small">RideSmart Digital Ticket</h6><hr>
-                            <div class="row text-start mb-3">
-                                <div class="col-6"><label class="small text-muted d-block">PASSENGER</label><span class="fw-bold" style="font-size: 12px;">{{ user_name }}</span></div>
-                                <div class="col-6"><label class="small text-muted d-block">REF NO</label><span class="fw-bold" style="font-size: 12px;">{{ my_booking[0].ticket_ref }}</span></div>
-                            </div>
-                            <div class="row text-start mb-3">
-                                <div class="col-6"><label class="small text-muted d-block">BUS PLATE</label><span class="fw-bold" style="font-size: 12px;">{{ bus.plateno }}</span></div>
-                                <div class="col-6"><label class="small text-muted d-block">SEAT</label><span class="fw-bold text-success">{{ my_booking[0].seatingno }}</span></div>
-                            </div>
-                            <div class="qr-placeholder"><i class="bi bi-qr-code"></i></div>
+                    <div class="route-visual">
+                        <div class="text-start">
+                            <div class="time-big">07:35</div>
+                            <div class="loc-small cardPickup">{{ bus.startlocation }}</div>
                         </div>
-                        <button class="btn btn-dark w-100 mt-4 fw-bold py-3" onclick="downloadTicket('captureArea{{ bus.busId }}', '{{ my_booking[0].ticket_ref }}')">
-                            SAVE TICKET TO PHONE
-                        </button>
+                        <div class="connector"></div>
+                        <div class="text-end">
+                            <div class="time-big">08:15</div>
+                            <div class="loc-small cardDest">{{ bus.destination }}</div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-end">
+                        <div>
+                            <div class="price-text fw-bold">KES 50.00</div>
+                            {% set taken_count = bookings | selectattr('busId', 'equalto', bus.busId) | list | length %}
+                            <div class="text-muted small fw-bold" style="font-size: 11px;">CAPACITY: {{ bus.totalcapacity - taken_count }} / {{ bus.totalcapacity }} LEFT</div>
+                        </div>
+
+                        {% if my_booking %}
+                            <div class="text-end">
+                                <span class="text-success fw-bold d-block" style="font-size: 12px;">CONFIRMED (Seat {{ my_booking[0].seatingno }})</span>
+                                <a href="javascript:void(0)" class="cancel-link" onclick="triggerCancelModal('/cancel_booking/{{ my_booking[0].bookingId }}')">Cancel Booking</a>
+                            </div>
+                        {% else %}
+                            <button class="btn btn-dark px-5 py-2 fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ bus.busId }}">
+                                Select Seat
+                            </button>
+                        {% endif %}
+                    </div>
+
+                    <div class="collapse" id="collapse{{ bus.busId }}">
+                        <div class="interior-container">
+                            <div class="seat-legend">
+                                <div class="legend-item"><div class="legend-box" style="background: white;"></div> Available</div>
+                                <div class="legend-item"><div class="legend-box" style="background: #f39c12; border:none;"></div> Taken</div>
+                                <div class="legend-item"><div class="legend-box" style="background: black; border:none;"></div> Your Choice</div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-7 text-center">
+                                    <div class="bus-frame shadow-sm">
+                                        <div class="seat-grid">
+                                            {% set total_seats = bus.totalcapacity | int %}
+                                            {% set num_rows = (total_seats / 4) | round(0, 'ceil') | int %}
+                                            {% set count = namespace(value=0) %}
+
+                                            {% for row_num in range(1, num_rows + 1) %}
+                                                <div class="row-id">{{ row_num }}</div>
+                                                {% for col_char in ['A', 'B', 'C', 'D'] %}
+                                                    {% if count.value < total_seats %}
+                                                        {% if col_char == 'C' %}<div class="aisle-space"></div>{% endif %}
+                                                        {% set s_id = row_num | string + col_char %}
+                                                        {% set is_taken = bookings | selectattr('busId', 'equalto', bus.busId) | selectattr('seatingno', 'equalto', s_id) | list %}
+                                                        <div class="seat {% if is_taken %}occupied{% endif %}" onclick="selectSeat(this, '{{ s_id }}', '{{ bus.busId }}')">
+                                                            {{ s_id }}
+                                                        </div>
+                                                        {% set count.value = count.value + 1 %}
+                                                    {% else %}
+                                                        {% if col_char == 'C' %}<div class="aisle-space"></div>{% endif %}
+                                                        <div class="empty-space"></div>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-5">
+                                    <div class="summary-panel h-100 d-flex flex-column justify-content-center">
+                                        <h6 class="fw-800 text-muted uppercase small mb-4">Confirm Selection</h6>
+                                        <div class="mb-3">
+                                            <label class="text-muted small d-block">PASSENGER</label>
+                                            <span class="fw-bold" style="font-size: 14px;">{{ user_name }}</span>
+                                        </div>
+                                        <div class="mb-4">
+                                            <label class="text-muted small d-block">SELECTED SEAT</label>
+                                            <span id="displaySeat{{ bus.busId }}" class="fw-bold text-success fs-5">—</span>
+                                        </div>
+                                        <button class="btn-confirm" id="btn{{ bus.busId }}" disabled data-bs-toggle="modal" data-bs-target="#paymentModal{{ bus.busId }}">
+                                            Proceed to Payment
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-            {% endif %}
 
-        {% endfor %}
+                <div class="modal fade" id="paymentModal{{ bus.busId }}" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content text-center p-5 border-0" style="border-radius:25px;">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/1/15/M-PESA_LOGO-01.svg" width="100" class="mb-4 mx-auto">
+                            <h5 class="fw-800" style="letter-spacing: -0.02em;">M-Pesa Checkout</h5>
+                            <p class="text-muted small">Confirm payment of <strong>KES 50.00</strong> for Seat <strong class="pay-seat-text text-dark"></strong>.</p>
+                            <form action="/process_booking" method="POST" onsubmit="showProcessingModal('{{ bus.busId }}')">
+                                <input type="hidden" name="seatingno" class="pay-seat-input">
+                                <input type="hidden" name="busId" value="{{ bus.busId }}">
+                                <input type="hidden" name="amount_paid" value="50.00">
+                                <button type="submit" class="btn btn-success w-100 py-3 fw-bold mt-3 text-uppercase" style="border-radius:12px; background-color: #198754; border: none; font-size: 14px;">
+                                    PAY NOW
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="processingModal{{ bus.busId }}" data-bs-backdrop="static" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content text-center p-5 border-0" style="border-radius:25px;">
+                            <div class="spinner-border text-success mb-4" role="status" style="width: 3rem; height: 3rem;"></div>
+                            <h5 class="fw-800">Awaiting Confirmation</h5>
+                            <p class="text-muted">Please enter your <strong>M-Pesa PIN</strong> on the prompt sent to your phone.</p>
+                        </div>
+                    </div>
+                </div>
+
+                {% if my_booking %}
+                <div class="modal fade" id="ticketModal{{ bus.busId }}" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content p-4 text-center border-0">
+                            <div id="captureArea{{ bus.busId }}" class="ticket-design">
+                                <h6 class="fw-800 text-muted uppercase small">RideSmart Digital Ticket</h6><hr>
+                                <div class="row text-start mb-3">
+                                    <div class="col-6"><label class="small text-muted d-block">PASSENGER</label><span class="fw-bold" style="font-size: 12px;">{{ user_name }}</span></div>
+                                    <div class="col-6"><label class="small text-muted d-block">REF NO</label><span class="fw-bold" style="font-size: 12px;">{{ my_booking[0].ticket_ref }}</span></div>
+                                </div>
+                                <div class="row text-start mb-3">
+                                    <div class="col-6"><label class="small text-muted d-block">BUS PLATE</label><span class="fw-bold" style="font-size: 12px;">{{ bus.plateno }}</span></div>
+                                    <div class="col-6"><label class="small text-muted d-block">SEAT</label><span class="fw-bold text-success">{{ my_booking[0].seatingno }}</span></div>
+                                </div>
+                                <div class="qr-placeholder"><i class="bi bi-qr-code"></i></div>
+                            </div>
+                            <button class="btn btn-dark w-100 mt-4 fw-bold py-3" onclick="downloadTicket('captureArea{{ bus.busId }}', '{{ my_booking[0].ticket_ref }}')">
+                                SAVE TICKET TO PHONE
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            {% endfor %}
+        {% elif request.args.get('pickup') %}
+            <div class="text-center py-5">
+                <i class="bi bi-bus-front text-muted" style="font-size: 3rem;"></i>
+                <h5 class="mt-3 fw-bold">No buses found</h5>
+                <p class="text-muted">No buses are available from {{ request.args.get('pickup') }} to {{ request.args.get('destination') }}.</p>
+            </div>
+        {% else %}
+            <div class="text-center py-5" style="opacity: 0.6;">
+                <h5 class="fw-800 uppercase" style="letter-spacing: 0.05em; color: #999;">Find your next ride</h5>
+                <p class="small fw-bold">Select your pickup and destination to view available buses.</p>
+            </div>
+        {% endif %}
     </div>
 </div>
 
@@ -367,7 +381,7 @@
     function showProcessingModal(busId) {
         const payModalEl = document.getElementById('paymentModal' + busId);
         const payModal = bootstrap.Modal.getInstance(payModalEl);
-        payModal.hide();
+        if (payModal) payModal.hide();
         
         const procModal = new bootstrap.Modal(document.getElementById('processingModal' + busId));
         procModal.show();
@@ -378,13 +392,6 @@
         confirmBtn.setAttribute('href', cancelUrl);
         const cancelModal = new bootstrap.Modal(document.getElementById('hciCancelModal'));
         cancelModal.show();
-    }
-
-    function syncRouteLabels() {
-        const pickup = document.getElementById('pickupSelect').value;
-        const destination = document.getElementById('destSelect').value;
-        document.querySelectorAll('.cardPickup').forEach(el => el.innerText = pickup);
-        document.querySelectorAll('.cardDest').forEach(el => el.innerText = destination);
     }
 
     function selectSeat(el, seatId, busId) {
