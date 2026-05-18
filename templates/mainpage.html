@@ -4,53 +4,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RideSmart  | Book Your Seat</title>
+    <title>RideSmart | Book Your Seat</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <style>
-        :root { 
-            --brand-black: #000000; 
-            --brand-orange: #f39c12; 
+        :root {
+            --brand-black: #000000;
+            --brand-orange: #f39c12;
             --bg-light: #f4f4f4;
             --seat-available: #ffffff;
         }
 
-        body { 
-            font-family: 'Plus Jakarta Sans', sans-serif; 
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
             font-size: 14px;
-            background: var(--bg-light); 
-            color: #111; 
+            background: var(--bg-light);
+            color: #111;
             letter-spacing: -0.01em;
         }
 
         .navbar { background: white; border-bottom: 2px solid var(--brand-black); padding: 15px 0; }
-        
-        .navbar-brand { 
-            font-weight: 800; 
-            font-size: 1.15rem; 
-            color: var(--brand-black); 
-            text-decoration: none; 
+
+        .navbar-brand {
+            font-weight: 800;
+            font-size: 1.15rem;
+            color: var(--brand-black);
+            text-decoration: none;
             letter-spacing: -0.03em;
         }
 
-        .user-pill { 
-            background: #f8f9fa; 
-            padding: 8px 16px; 
-            border-radius: 50px; 
-            border: 1px solid #eee; 
-            font-weight: 700; 
-            font-size: 12px; 
+        .user-pill {
+            background: #f8f9fa;
+            padding: 8px 16px;
+            border-radius: 50px;
+            border: 1px solid #eee;
+            font-weight: 700;
+            font-size: 12px;
         }
 
-        .signout-link { 
-            color: #dc3545; 
-            text-decoration: none; 
-            font-weight: 700; 
-            font-size: 12px; 
-            margin-left: 15px; 
+        .signout-link {
+            color: #dc3545;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 12px;
+            margin-left: 15px;
         }
 
         .profile-toggle-btn {
@@ -65,32 +65,46 @@
         }
 
         .search-card {
-            background: white; border-radius: 15px; padding: 25px;
-            border: 1px solid #eee; box-shadow: 0 4px 20px rgba(0,0,0,0.02);
-            margin-bottom: 30px; 
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid #eee;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+            margin-bottom: 30px;
         }
 
-        .form-label, .uppercase-label, .summary-panel label, .ticket-design label { 
-            font-size: 11px !important; 
-            font-weight: 800; 
-            text-transform: uppercase; 
-            color: #999; 
+        .form-label, .uppercase-label, .summary-panel label, .ticket-design label {
+            font-size: 11px !important;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: #999;
             letter-spacing: 0.05em;
         }
 
         .form-select { border-radius: 9px; padding: 10px; font-weight: 600; border: 1.5px solid #eee; font-size: 14px; }
 
         .seat-legend {
-            display: flex; gap: 20px; justify-content: center; margin-bottom: 20px;
-            padding: 10px; background: #fff; border-radius: 10px; border: 1px solid #eee;
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: #fff;
+            border-radius: 10px;
+            border: 1px solid #eee;
+            flex-wrap: wrap;
         }
         .legend-item { display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
         .legend-box { width: 18px; height: 18px; border-radius: 4px; border: 1px solid #ddd; }
 
         .bus-card {
-            background: white; border-radius: 16px; padding: 30px;
-            border: 1px solid #eee; margin-bottom: 30px; 
-            position: relative; transition: transform 0.2s;
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            border: 1px solid #eee;
+            margin-bottom: 30px;
+            position: relative;
+            transition: transform 0.2s;
         }
 
         .bus-card.booked-by-me {
@@ -99,60 +113,127 @@
         }
 
         .route-visual { display: flex; align-items: center; justify-content: space-between; margin: 25px 0; }
-        
-        .time-big { 
-            font-size: 1.75rem; 
-            font-weight: 800; 
-            letter-spacing: -0.04em; 
-            line-height: 1; 
+
+        .time-big {
+            font-size: 1.75rem;
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            line-height: 1;
         }
 
         .loc-small { color: #888; font-size: 12px; font-weight: 700; text-transform: uppercase; }
-        
+
         .connector { flex-grow: 1; height: 1px; background: #ddd; margin: 0 25px; position: relative; }
         .connector::after { content: '→'; position: absolute; right: -5px; top: -14px; font-size: 1.2rem; }
 
-        .interior-container { 
-            background: #fafafa; border-radius: 20px; padding: 30px; 
-            border: 1px solid #eee; margin-top: 25px; 
+        .interior-container {
+            background: #fafafa;
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid #eee;
+            margin-top: 25px;
         }
 
         .bus-frame {
-            max-width: 360px; margin: 0 auto; background: white; 
-            padding: 35px 20px; border: 2px solid #eee; border-radius: 45px 45px 15px 15px;
+            max-width: 360px;
+            margin: 0 auto;
+            background: white;
+            padding: 35px 20px;
+            border: 2px solid #eee;
+            border-radius: 45px 45px 15px 15px;
         }
 
         .seat-grid { display: grid; grid-template-columns: 20px 1fr 1fr 30px 1fr 1fr; gap: 12px; align-items: center; }
-        
+
         .row-id { font-size: 10px; font-weight: 800; color: #ddd; text-align: center; }
-        
-        .seat { 
-            height: 45px; background: var(--seat-available); border: 1.5px solid #e0e0e0; 
-            border-radius: 8px; cursor: pointer; display: flex; align-items: center; 
-            justify-content: center; font-size: 11px; font-weight: 800; 
+
+        .seat {
+            height: 45px;
+            background: var(--seat-available);
+            border: 1.5px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 800;
+            transition: background 0.15s, transform 0.1s;
+            user-select: none;
         }
 
+        .seat:hover:not(.occupied) { border-color: #aaa; transform: scale(1.04); }
         .seat.occupied { background: var(--brand-orange) !important; color: white !important; cursor: not-allowed; border: none; }
-        .seat.selected { background: var(--brand-black) !important; color: white !important; }
+        .seat.selected { background: var(--brand-black) !important; color: white !important; border: none; }
 
-        .summary-panel { background: white; padding: 25px; border-radius: 12px; border: 1px solid #eee; }
-        
+        /* ── Booking summary panel ──────────────────────────────── */
+        .summary-panel {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid #eee;
+        }
+
+        /* Pill tags showing each selected seat label */
+        .seat-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: #f0f0f0;
+            border-radius: 20px;
+            padding: 4px 10px;
+            font-size: 12px;
+            font-weight: 700;
+            margin: 2px;
+        }
+
+        .seat-tag .remove-seat {
+            cursor: pointer;
+            color: #999;
+            font-size: 10px;
+            line-height: 1;
+        }
+
+        .seat-tag .remove-seat:hover { color: #dc3545; }
+
+        /* Booking summary box above the pay button */
+        .booking-summary-box {
+            background: #f8f8f8;
+            border-radius: 10px;
+            padding: 14px 16px;
+            margin-bottom: 16px;
+            border: 1px solid #eee;
+        }
+
+        .booking-summary-box .summary-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .booking-summary-box .summary-row:last-child { margin-bottom: 0; }
+        .booking-summary-box .summary-row.total { font-size: 14px; font-weight: 800; border-top: 1px solid #e0e0e0; padding-top: 8px; margin-top: 4px; }
+
         .btn-confirm, .btn-dark { font-size: 13px; font-weight: 800; letter-spacing: 0.02em; text-transform: uppercase; }
 
         .btn-confirm { background: #000; color: #fff; width: 100%; padding: 15px; border-radius: 10px; border: none; }
-        .btn-confirm:disabled { background: #666; cursor: not-allowed; }
+        .btn-confirm:disabled { background: #bbb; cursor: not-allowed; }
+        .btn-confirm:not(:disabled):hover { background: #222; }
 
         .ticket-design { border: 2px dashed #ccc; padding: 20px; border-radius: 15px; background: #fff; max-width: 350px; margin: 0 auto; }
         .qr-placeholder { width: 120px; height: 120px; background: #222; margin: 15px auto; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 2.5rem; }
-        
+
         .cancel-link { font-size: 11px; text-decoration: underline; cursor: pointer; color: #dc3545; font-weight: 700; text-transform: uppercase; }
-        
+
         .aisle-space { width: 30px; }
         .empty-space { height: 45px; }
-        
+
         .price-text { font-size: 1.1rem !important; letter-spacing: -0.02em; }
 
-        /* ── PROFILE PANEL ────────────────────────────────── */
+        /* ── Profile panel ──────────────────────────────────────── */
         .profile-panel {
             background: white;
             border-radius: 15px;
@@ -160,7 +241,6 @@
             padding: 30px;
             max-width: 900px;
             margin: 0 auto 30px auto;
-            /* Hidden by default — shown by JS, no page reload */
             display: none;
         }
 
@@ -173,7 +253,7 @@
             margin-bottom: 0;
         }
 
-        /* Read-only state: inputs look like plain text */
+        /* Read-only by default — turns interactive once Edit is clicked */
         .profile-panel .form-control {
             border-radius: 9px;
             border: 1.5px solid #eee;
@@ -182,11 +262,9 @@
             height: 46px;
             background: #fafafa;
             color: #555;
-            /* Disabled pointer so user knows it's not editable until Edit is clicked */
             pointer-events: none;
         }
 
-        /* Edit mode: inputs become interactive */
         .profile-panel .form-control.editable {
             background: #fff;
             color: #111;
@@ -220,7 +298,6 @@
             padding: 0 12px;
         }
 
-        /* Profile action buttons */
         .btn-edit-profile {
             background: #f4f4f4;
             color: #000;
@@ -249,7 +326,7 @@
             border: none;
             padding: 0 20px;
             cursor: pointer;
-            display: none; /* Hidden until Edit is clicked */
+            display: none;
         }
 
         .btn-save-profile:hover { opacity: 0.85; }
@@ -265,23 +342,27 @@
             border: 1.5px solid #eee;
             padding: 0 16px;
             cursor: pointer;
-            display: none; /* Hidden until Edit is clicked */
+            display: none;
         }
 
         .btn-cancel-edit:hover { color: #555; border-color: #ccc; }
 
-        /* Search / no-results states */
-        .search-prompt {
-            text-align: center; padding: 60px 20px; color: #aaa;
-        }
+        .search-prompt { text-align: center; padding: 60px 20px; color: #aaa; }
         .search-prompt i { font-size: 3rem; margin-bottom: 15px; display: block; }
         .search-prompt p { font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; }
 
-        .no-results {
-            text-align: center; padding: 60px 20px; color: #aaa;
-        }
+        .no-results { text-align: center; padding: 60px 20px; color: #aaa; }
         .no-results i { font-size: 3rem; margin-bottom: 15px; display: block; }
         .no-results p { font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+        /* Mobile tweaks */
+        @media (max-width: 576px) {
+            .bus-frame { padding: 20px 10px; }
+            .seat-grid { gap: 7px; }
+            .seat { height: 38px; font-size: 10px; }
+            .interior-container { padding: 16px; }
+            .summary-panel { margin-top: 20px; }
+        }
     </style>
 </head>
 <body>
@@ -290,7 +371,7 @@
     <div class="container d-flex justify-content-between align-items-center">
         <a class="navbar-brand" href="#">RIDESMART NAIROBI</a>
         <div class="d-flex align-items-center">
-            <div class="user-pill"><i class="bi bi-person me-2"></i> {{ user_name }}</div>
+            <div class="user-pill"><i class="bi bi-person me-2"></i>{{ user_name }}</div>
             <button class="profile-toggle-btn" onclick="toggleProfilePanel()">
                 <i class="bi bi-person-gear me-1"></i>Profile
             </button>
@@ -301,35 +382,27 @@
 
 <div class="container py-4">
 
-    <!-- ── PROFILE PANEL ──────────────────────────────────────────
-         Hidden by default. toggleProfilePanel() shows it and hides
-         #mainContent. Closing restores #mainContent. No page reload.
-    ─────────────────────────────────────────────────────────────── -->
+    <!-- Profile panel — hidden by default, toggled via JS without page reload -->
     <div id="profilePanel" class="profile-panel {% if show_profile %}open{% endif %}">
 
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h5 class="mb-0"><i class="bi bi-person-circle me-2"></i>My Profile</h5>
             <div class="d-flex align-items-center gap-2">
-                <!-- Edit button: visible by default -->
                 <button type="button" class="btn-edit-profile" id="btnEditProfile" onclick="enableEditMode()">
                     <i class="bi bi-pencil me-1"></i>Edit Profile
                 </button>
-                <!-- Save button: hidden until Edit is clicked -->
                 <button type="submit" form="profileForm" class="btn-save-profile" id="btnSaveProfile">
                     <i class="bi bi-check-lg me-1"></i>Save Changes
                 </button>
-                <!-- Cancel button: hidden until Edit is clicked -->
                 <button type="button" class="btn-cancel-edit" id="btnCancelEdit" onclick="cancelEditMode()">
                     Cancel
                 </button>
-                <!-- Close panel button -->
                 <button onclick="toggleProfilePanel()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:#bbb;margin-left:4px;">
                     <i class="bi bi-x-lg"></i>
                 </button>
             </div>
         </div>
 
-        <!-- Profile feedback messages -->
         {% if profile_success %}
         <div class="alert alert-success py-2 mb-3" style="border-radius:9px;font-size:13px;font-weight:600;">
             <i class="bi bi-check-circle-fill me-2"></i>{{ profile_success }}
@@ -346,7 +419,6 @@
             <div class="row g-3">
                 <div class="col-md-3">
                     <label class="form-label">First Name</label>
-                    <!-- Fields start as read-only (no 'editable' class, pointer-events:none) -->
                     <input type="text" id="pFname" name="fname" class="form-control profile-field"
                            value="{{ profile_data.fname }}" required readonly>
                 </div>
@@ -367,7 +439,6 @@
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Gender</label>
-                    <!-- Gender is always display-only -->
                     <div class="gender-display">{{ profile_data.gender if profile_data.gender else 'Not specified' }}</div>
                 </div>
             </div>
@@ -375,13 +446,9 @@
         {% endif %}
     </div>
 
-    <!-- ── MAIN CONTENT (search + bus list) ──────────────────────
-         Wrapped in one div so we can hide/show it as one unit
-         when the profile panel opens/closes.
-    ─────────────────────────────────────────────────────────────── -->
+    <!-- Main content: search bar + bus listing -->
     <div id="mainContent">
 
-        <!-- Booking feedback banners -->
         {% if booking_success %}
         <div class="alert alert-success alert-dismissible fade show" role="alert"
              style="max-width:900px; margin: 0 auto 20px auto; border-radius: 12px; font-weight: 600; font-size: 13px;">
@@ -440,12 +507,12 @@
 
             {% else %}
             {% for bus in buses %}
-                {% set my_booking = bookings | selectattr('busId', 'equalto', bus.busId) | list %}
+                {% set my_bookings = bookings | selectattr('busId', 'equalto', bus.busId) | list %}
 
-                <div class="bus-card {% if my_booking %}booked-by-me{% endif %}">
+                <div class="bus-card {% if my_bookings %}booked-by-me{% endif %}">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <span class="fw-800 text-muted small uppercase">CITY HOPPA • {{ bus.plateno }}</span>
-                        {% if my_booking %}
+                        {% if my_bookings %}
                             <button class="btn btn-warning btn-sm fw-bold px-3" data-bs-toggle="modal" data-bs-target="#ticketModal{{ bus.busId }}">
                                 <i class="bi bi-ticket-perforated me-2"></i>VIEW TICKET
                             </button>
@@ -468,32 +535,38 @@
 
                     <div class="d-flex justify-content-between align-items-end">
                         <div>
-                            <div class="price-text fw-bold">KES {{ "{:,.2f}".format(bus.fare) if bus.fare else '0.00' }}</div>
-                            {% set taken_count = bookings | selectattr('busId', 'equalto', bus.busId) | list | length %}
+                            <div class="price-text fw-bold">KES {{ "{:,.2f}".format(bus.fare) if bus.fare else '0.00' }} <span style="font-size:12px;color:#aaa;font-weight:600;">/ seat</span></div>
+                            {% set taken_count = all_bus_bookings | selectattr('busId', 'equalto', bus.busId) | list | length %}
                             <div class="text-muted small fw-bold" style="font-size: 11px;">CAPACITY: {{ bus.totalcapacity - taken_count }} / {{ bus.totalcapacity }} LEFT</div>
                         </div>
 
-                        {% if my_booking %}
+                        {% if my_bookings %}
                             <div class="text-end">
-                                <span class="text-success fw-bold d-block" style="font-size: 12px;">CONFIRMED (Seat {{ my_booking[0].seatingno }})</span>
-                                <a href="javascript:void(0)" class="cancel-link" onclick="triggerCancelModal('/cancel_booking/{{ my_booking[0].bookingId }}')">Cancel Booking</a>
+                                {% set seat_labels = my_bookings | map(attribute='seatingno') | list %}
+                                <span class="text-success fw-bold d-block" style="font-size: 12px;">CONFIRMED (Seat{{ 's' if seat_labels|length > 1 else '' }} {{ seat_labels | join(', ') }})</span>
+                                <a href="javascript:void(0)" class="cancel-link" onclick="triggerCancelModal('/cancel_booking/{{ my_bookings[0].bookingId }}')">Cancel Booking</a>
                             </div>
                         {% else %}
                             <button class="btn btn-dark px-5 py-2 fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ bus.busId }}">
-                                Select Seat
+                                Select Seats
                             </button>
                         {% endif %}
                     </div>
 
+                    <!-- Seat selection panel — hidden until the button above is clicked -->
                     <div class="collapse" id="collapse{{ bus.busId }}">
                         <div class="interior-container">
                             <div class="seat-legend">
                                 <div class="legend-item"><div class="legend-box" style="background: white;"></div> Available</div>
                                 <div class="legend-item"><div class="legend-box" style="background: #f39c12; border:none;"></div> Taken</div>
-                                <div class="legend-item"><div class="legend-box" style="background: black; border:none;"></div> Your Choice</div>
+                                <div class="legend-item"><div class="legend-box" style="background: black; border:none;"></div> Selected</div>
                             </div>
+                            <p class="text-center text-muted mb-3" style="font-size:12px;font-weight:600;">
+                                <i class="bi bi-info-circle me-1"></i>Tap seats to select — you can pick multiple
+                            </p>
 
                             <div class="row">
+                                <!-- Seat grid -->
                                 <div class="col-lg-7 text-center">
                                     <div class="bus-frame shadow-sm">
                                         <div class="seat-grid">
@@ -507,8 +580,9 @@
                                                     {% if count.value < total_seats %}
                                                         {% if col_char == 'C' %}<div class="aisle-space"></div>{% endif %}
                                                         {% set s_id = row_num | string + col_char %}
-                                                        {% set is_taken = bookings | selectattr('busId', 'equalto', bus.busId) | selectattr('seatingno', 'equalto', s_id) | list %}
-                                                        <div class="seat {% if is_taken %}occupied{% endif %}" onclick="selectSeat(this, '{{ s_id }}', '{{ bus.busId }}')">
+                                                        {% set is_taken = all_bus_bookings | selectattr('busId', 'equalto', bus.busId) | selectattr('seatingno', 'equalto', s_id) | list %}
+                                                        <div class="seat {% if is_taken %}occupied{% endif %}"
+                                                             onclick="toggleSeat(this, '{{ s_id }}', '{{ bus.busId }}', {{ bus.fare }})">
                                                             {{ s_id }}
                                                         </div>
                                                         {% set count.value = count.value + 1 %}
@@ -521,18 +595,43 @@
                                         </div>
                                     </div>
                                 </div>
+
+                                <!-- Booking summary panel -->
                                 <div class="col-lg-5">
-                                    <div class="summary-panel h-100 d-flex flex-column justify-content-center">
-                                        <h6 class="fw-800 text-muted uppercase small mb-4">Confirm Selection</h6>
+                                    <div class="summary-panel h-100 d-flex flex-column justify-content-start" style="padding-top:20px;">
+                                        <h6 class="fw-800 text-muted uppercase small mb-4">Booking Summary</h6>
+
                                         <div class="mb-3">
-                                            <label class="text-muted small d-block">PASSENGER</label>
+                                            <label class="text-muted small d-block mb-1">PASSENGER</label>
                                             <span class="fw-bold" style="font-size: 14px;">{{ user_name }}</span>
                                         </div>
-                                        <div class="mb-4">
-                                            <label class="text-muted small d-block">SELECTED SEAT</label>
-                                            <span id="displaySeat{{ bus.busId }}" class="fw-bold text-success fs-5">—</span>
+
+                                        <div class="mb-3">
+                                            <label class="text-muted small d-block mb-1">SELECTED SEATS</label>
+                                            <!-- Seat tags get added/removed here as the user clicks the grid -->
+                                            <div id="seatTags{{ bus.busId }}" style="min-height:28px;">
+                                                <span class="text-muted" id="noSeatMsg{{ bus.busId }}" style="font-size:13px;font-weight:600;">None selected</span>
+                                            </div>
                                         </div>
-                                        <button class="btn-confirm" id="btn{{ bus.busId }}" disabled data-bs-toggle="modal" data-bs-target="#paymentModal{{ bus.busId }}">
+
+                                        <!-- Shows seat count + total cost once at least one seat is chosen -->
+                                        <div class="booking-summary-box" id="summaryBox{{ bus.busId }}" style="display:none;">
+                                            <div class="summary-row">
+                                                <span>Seats</span>
+                                                <span id="seatCount{{ bus.busId }}">0</span>
+                                            </div>
+                                            <div class="summary-row">
+                                                <span>Per seat</span>
+                                                <span>KES {{ "{:,.2f}".format(bus.fare) if bus.fare else '0.00' }}</span>
+                                            </div>
+                                            <div class="summary-row total">
+                                                <span>Total</span>
+                                                <span id="totalAmount{{ bus.busId }}" class="text-success">KES 0.00</span>
+                                            </div>
+                                        </div>
+
+                                        <button class="btn-confirm mt-auto" id="btn{{ bus.busId }}" disabled
+                                                data-bs-toggle="modal" data-bs-target="#paymentModal{{ bus.busId }}">
                                             Proceed to Payment
                                         </button>
                                     </div>
@@ -542,17 +641,37 @@
                     </div>
                 </div>
 
+                <!-- M-Pesa payment confirmation modal -->
                 <div class="modal fade" id="paymentModal{{ bus.busId }}" tabindex="-1">
                     <div class="modal-dialog modal-dialog-centered">
                         <div class="modal-content text-center p-5 border-0" style="border-radius:25px;">
                             <img src="https://upload.wikimedia.org/wikipedia/commons/1/15/M-PESA_LOGO-01.svg" width="100" class="mb-4 mx-auto">
                             <h5 class="fw-800" style="letter-spacing: -0.02em;">M-Pesa Checkout</h5>
-                            <p class="text-muted small">Confirm payment of <strong>KES {{ "{:,.2f}".format(bus.fare) if bus.fare else '0.00' }}</strong> for Seat <strong class="pay-seat-text{{ bus.busId }} text-dark"></strong>.</p>
+
+                            <!-- Dynamically filled by JS before the modal opens -->
+                            <div class="booking-summary-box mx-auto mb-3" style="max-width:280px;text-align:left;">
+                                <div class="summary-row">
+                                    <span>Seats</span>
+                                    <span id="modalSeats{{ bus.busId }}">—</span>
+                                </div>
+                                <div class="summary-row">
+                                    <span>Passengers</span>
+                                    <span id="modalCount{{ bus.busId }}">—</span>
+                                </div>
+                                <div class="summary-row total">
+                                    <span>Total</span>
+                                    <span id="modalTotal{{ bus.busId }}" class="text-success">KES 0.00</span>
+                                </div>
+                            </div>
+
                             <form action="/process_booking" method="POST" onsubmit="showProcessingModal('{{ bus.busId }}')">
-                                <input type="hidden" name="seatingno" class="pay-seat-input{{ bus.busId }}">
+                                <!-- seats_json holds the JSON array of selected seat labels -->
+                                <input type="hidden" name="seats_json" id="seatsJsonInput{{ bus.busId }}">
                                 <input type="hidden" name="busId" value="{{ bus.busId }}">
-                                <input type="hidden" name="amount_paid" value="{{ bus.fare if bus.fare else 50 }}">
-                                <button type="submit" class="btn btn-success w-100 py-3 fw-bold mt-3 text-uppercase" style="border-radius:12px; background-color: #198754; border: none; font-size: 14px;">
+                                <!-- amount_paid gets set by JS to fare × seat count -->
+                                <input type="hidden" name="amount_paid" id="amountInput{{ bus.busId }}">
+                                <button type="submit" class="btn btn-success w-100 py-3 fw-bold mt-2 text-uppercase"
+                                        style="border-radius:12px; background-color:#198754; border:none; font-size:14px;">
                                     PAY NOW
                                 </button>
                             </form>
@@ -560,39 +679,51 @@
                     </div>
                 </div>
 
+                <!-- Spinner shown while waiting for M-Pesa PIN entry -->
                 <div class="modal fade" id="processingModal{{ bus.busId }}" data-bs-backdrop="static" tabindex="-1">
                     <div class="modal-dialog modal-dialog-centered">
                         <div class="modal-content text-center p-5 border-0" style="border-radius:25px;">
-                            <div class="spinner-border text-success mb-4" role="status" style="width: 3rem; height: 3rem;"></div>
+                            <div class="spinner-border text-success mb-4" role="status" style="width:3rem;height:3rem;"></div>
                             <h5 class="fw-800">Awaiting Confirmation</h5>
                             <p class="text-muted">Please enter your <strong>M-Pesa PIN</strong> on the prompt sent to your phone.</p>
                         </div>
                     </div>
                 </div>
 
-                {% if my_booking %}
+                <!-- Ticket modal — only shown when the user has active bookings on this bus -->
+                {% if my_bookings %}
                 <div class="modal fade" id="ticketModal{{ bus.busId }}" tabindex="-1">
                     <div class="modal-dialog modal-dialog-centered">
                         <div class="modal-content p-4 text-center border-0">
                             <div id="captureArea{{ bus.busId }}" class="ticket-design">
                                 <h6 class="fw-800 text-muted uppercase small">RideSmart Digital Ticket</h6><hr>
                                 <div class="row text-start mb-3">
-                                    <div class="col-6"><label class="small text-muted d-block">PASSENGER</label><span class="fw-bold" style="font-size: 12px;">{{ user_name }}</span></div>
-                                    <div class="col-6"><label class="small text-muted d-block">REF NO</label><span class="fw-bold" style="font-size: 12px;">{{ my_booking[0].ticket_ref }}</span></div>
+                                    <div class="col-6"><label class="small text-muted d-block">PASSENGER</label><span class="fw-bold" style="font-size:12px;">{{ user_name }}</span></div>
+                                    <div class="col-6"><label class="small text-muted d-block">REF NO</label><span class="fw-bold" style="font-size:12px;">{{ my_bookings[0].ticket_ref }}</span></div>
                                 </div>
                                 <div class="row text-start mb-3">
-                                    <div class="col-6"><label class="small text-muted d-block">BUS PLATE</label><span class="fw-bold" style="font-size: 12px;">{{ bus.plateno }}</span></div>
-                                    <div class="col-6"><label class="small text-muted d-block">SEAT</label><span class="fw-bold text-success">{{ my_booking[0].seatingno }}</span></div>
+                                    <div class="col-6"><label class="small text-muted d-block">BUS PLATE</label><span class="fw-bold" style="font-size:12px;">{{ bus.plateno }}</span></div>
+                                    <div class="col-6">
+                                        <label class="small text-muted d-block">SEAT{{ 'S' if my_bookings|length > 1 else '' }}</label>
+                                        <span class="fw-bold text-success">{{ my_bookings | map(attribute='seatingno') | join(', ') }}</span>
+                                    </div>
                                 </div>
+                                {% if my_bookings|length > 1 %}
+                                <div class="row text-start mb-3">
+                                    <div class="col-12"><label class="small text-muted d-block">TOTAL PASSENGERS</label><span class="fw-bold" style="font-size:12px;">{{ my_bookings|length }}</span></div>
+                                </div>
+                                {% endif %}
                                 <div class="qr-placeholder"><i class="bi bi-qr-code"></i></div>
                             </div>
-                            <button class="btn btn-dark w-100 mt-4 fw-bold py-3" onclick="downloadTicket('captureArea{{ bus.busId }}', '{{ my_booking[0].ticket_ref }}')">
+                            <button class="btn btn-dark w-100 mt-4 fw-bold py-3"
+                                    onclick="downloadTicket('captureArea{{ bus.busId }}', '{{ my_bookings[0].ticket_ref }}')">
                                 SAVE TICKET TO PHONE
                             </button>
                         </div>
                     </div>
                 </div>
                 {% endif %}
+
             {% endfor %}
             {% endif %}
 
@@ -602,7 +733,7 @@
 
 </div>
 
-<!-- Cancel confirmation modal — unchanged -->
+<!-- Cancel confirmation modal -->
 <div class="modal fade" id="hciCancelModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-sm modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
@@ -622,10 +753,9 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 
-    // ── PROFILE PANEL TOGGLE ─────────────────────────────────────
-    // Fix 1: When profile opens, hide #mainContent entirely.
-    //        When profile closes, restore #mainContent.
-    //        No page reload at any point.
+    // ── PROFILE PANEL ───────────────────────────────────────────
+    // Opens the profile panel and hides the main content so they don't overlap.
+    // No page reload — everything is toggled in-place.
 
     function toggleProfilePanel() {
         const panel = document.getElementById('profilePanel');
@@ -633,20 +763,18 @@
         const isOpen = panel.classList.contains('open');
 
         if (isOpen) {
-            // Closing: restore main content, reset edit mode first
             cancelEditMode();
             panel.classList.remove('open');
             main.style.display = '';
         } else {
-            // Opening: hide main content, show profile panel
             main.style.display = 'none';
             panel.classList.add('open');
             panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
     }
 
-    // If page reloaded with show_profile=1 (after save redirect),
-    // auto-open the panel and hide main content on load.
+    // If the page was reloaded after a profile save (show_profile=1 in URL),
+    // auto-open the panel and hide main content immediately.
     {% if show_profile %}
     document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('mainContent').style.display = 'none';
@@ -656,76 +784,162 @@
 
 
     // ── PROFILE EDIT MODE ────────────────────────────────────────
-    // Fix 2: Fields are read-only until "Edit Profile" is clicked.
-    //        Clicking "Edit Profile" makes fields editable and shows
-    //        Save + Cancel buttons.
-    //        Clicking "Cancel" restores original values and re-locks fields.
+    // Fields are read-only by default. Clicking Edit unlocks them
+    // and reveals Save + Cancel. Cancel restores the original values.
 
-    // Store original values so Cancel can restore them
     let _originalValues = {};
 
     function enableEditMode() {
         const fields = document.querySelectorAll('.profile-field');
-
-        // Save originals before user edits anything
         fields.forEach(function(f) {
             _originalValues[f.id] = f.value;
             f.removeAttribute('readonly');
             f.classList.add('editable');
         });
-
         document.getElementById('btnEditProfile').style.display = 'none';
         document.getElementById('btnSaveProfile').style.display  = 'inline-block';
         document.getElementById('btnCancelEdit').style.display   = 'inline-block';
-
-        // Focus the first editable field
         if (fields.length > 0) fields[0].focus();
     }
 
     function cancelEditMode() {
         const fields = document.querySelectorAll('.profile-field');
-
-        // Restore original values and lock fields back to read-only
         fields.forEach(function(f) {
-            if (_originalValues[f.id] !== undefined) {
-                f.value = _originalValues[f.id];
-            }
+            if (_originalValues[f.id] !== undefined) f.value = _originalValues[f.id];
             f.setAttribute('readonly', true);
             f.classList.remove('editable');
         });
-
         document.getElementById('btnEditProfile').style.display = 'inline-block';
         document.getElementById('btnSaveProfile').style.display  = 'none';
         document.getElementById('btnCancelEdit').style.display   = 'none';
     }
 
-    // ── EXISTING FUNCTIONS (unchanged) ───────────────────────────
+
+    // ── MULTI-SEAT SELECTION ─────────────────────────────────────
+    // selectedSeats maps busId → Set of seat labels.
+    // Each click on a seat toggles it in/out of the selection.
+
+    const selectedSeats = {};
+
+    function toggleSeat(el, seatId, busId, farePerSeat) {
+        // Don't touch occupied seats
+        if (el.classList.contains('occupied')) return;
+
+        if (!selectedSeats[busId]) selectedSeats[busId] = new Set();
+
+        if (selectedSeats[busId].has(seatId)) {
+            // Deselect — remove from set and revert to white
+            selectedSeats[busId].delete(seatId);
+            el.classList.remove('selected');
+        } else {
+            // Select — add to set and turn black
+            selectedSeats[busId].add(seatId);
+            el.classList.add('selected');
+        }
+
+        updateSummaryPanel(busId, farePerSeat);
+    }
+
+    function updateSummaryPanel(busId, farePerSeat) {
+        const seats = selectedSeats[busId] ? Array.from(selectedSeats[busId]) : [];
+        const count = seats.length;
+        const total = count * farePerSeat;
+
+        const tagsContainer = document.getElementById('seatTags' + busId);
+        const noSeatMsg     = document.getElementById('noSeatMsg' + busId);
+        const seatCountEl   = document.getElementById('seatCount' + busId);
+        const totalAmountEl = document.getElementById('totalAmount' + busId);
+        const summaryBox    = document.getElementById('summaryBox' + busId);
+        const confirmBtn    = document.getElementById('btn' + busId);
+
+        // Rebuild the seat tag pills
+        // Keep the "none selected" message element but hide it when seats exist
+        tagsContainer.querySelectorAll('.seat-tag').forEach(t => t.remove());
+
+        if (count === 0) {
+            noSeatMsg.style.display = '';
+            summaryBox.style.display = 'none';
+            confirmBtn.disabled = true;
+        } else {
+            noSeatMsg.style.display = 'none';
+            summaryBox.style.display = 'block';
+            confirmBtn.disabled = false;
+
+            seats.forEach(function(sid) {
+                const tag = document.createElement('span');
+                tag.className = 'seat-tag';
+                tag.innerHTML = sid +
+                    '<span class="remove-seat" onclick="removeSeatByTag(\'' + sid + '\', \'' + busId + '\', ' + farePerSeat + ')" title="Remove">✕</span>';
+                tagsContainer.appendChild(tag);
+            });
+
+            seatCountEl.textContent = count;
+            totalAmountEl.textContent = 'KES ' + total.toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+    }
+
+    // Deselect a seat by clicking the ✕ on its tag (mirrors clicking the seat itself)
+    function removeSeatByTag(seatId, busId, farePerSeat) {
+        if (selectedSeats[busId]) {
+            selectedSeats[busId].delete(seatId);
+        }
+        // Also visually deselect on the grid
+        const busFrame = document.querySelector('#collapse' + busId + ' .bus-frame');
+        if (busFrame) {
+            busFrame.querySelectorAll('.seat').forEach(function(el) {
+                if (el.textContent.trim() === seatId) el.classList.remove('selected');
+            });
+        }
+        updateSummaryPanel(busId, farePerSeat);
+    }
+
+
+    // ── PAYMENT MODAL ─────────────────────────────────────────────
+    // Before the modal opens, populate the hidden form fields
+    // and the confirmation summary so the user sees what they're paying for.
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // Intercept every payment modal's show event
+        document.querySelectorAll('[id^="paymentModal"]').forEach(function(modalEl) {
+            modalEl.addEventListener('show.bs.modal', function () {
+                const busId = modalEl.id.replace('paymentModal', '');
+                const seats = selectedSeats[busId] ? Array.from(selectedSeats[busId]) : [];
+
+                if (seats.length === 0) return;
+
+                // Read fare from the total amount label — already calculated
+                const totalAmountEl = document.getElementById('totalAmount' + busId);
+                const totalText = totalAmountEl ? totalAmountEl.textContent.replace('KES ', '').replace(/,/g, '') : '0';
+                const totalAmount = parseFloat(totalText) || 0;
+
+                // Populate the payment form hidden inputs
+                document.getElementById('seatsJsonInput' + busId).value = JSON.stringify(seats);
+                document.getElementById('amountInput' + busId).value = totalAmount;
+
+                // Fill in the modal summary so it reads like a receipt
+                document.getElementById('modalSeats' + busId).textContent = seats.join(', ');
+                document.getElementById('modalCount' + busId).textContent = seats.length;
+                document.getElementById('modalTotal' + busId).textContent =
+                    'KES ' + totalAmount.toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            });
+        });
+    });
+
+
+    // ── MISC ──────────────────────────────────────────────────────
 
     function showProcessingModal(busId) {
+        // Dismiss the payment modal and show the waiting spinner
         const payModalEl = document.getElementById('paymentModal' + busId);
         const payModal = bootstrap.Modal.getInstance(payModalEl);
-        payModal.hide();
+        if (payModal) payModal.hide();
         const procModal = new bootstrap.Modal(document.getElementById('processingModal' + busId));
         procModal.show();
     }
 
     function triggerCancelModal(cancelUrl) {
-        const confirmBtn = document.getElementById('confirmCancelBtn');
-        confirmBtn.setAttribute('href', cancelUrl);
-        const cancelModal = new bootstrap.Modal(document.getElementById('hciCancelModal'));
-        cancelModal.show();
-    }
-
-    function selectSeat(el, seatId, busId) {
-        if (el.classList.contains('occupied')) return;
-        const frame = el.closest('.bus-frame');
-        frame.querySelectorAll('.seat').forEach(s => s.classList.remove('selected'));
-        el.classList.add('selected');
-        document.getElementById('displaySeat' + busId).innerText = seatId;
-        document.getElementById('btn' + busId).disabled = false;
-        const modal = document.getElementById('paymentModal' + busId);
-        modal.querySelector('.pay-seat-text' + busId).innerText = seatId;
-        modal.querySelector('.pay-seat-input' + busId).value = seatId;
+        document.getElementById('confirmCancelBtn').setAttribute('href', cancelUrl);
+        new bootstrap.Modal(document.getElementById('hciCancelModal')).show();
     }
 
     function downloadTicket(divId, ticketRef) {
