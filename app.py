@@ -11,22 +11,22 @@ from werkzeug.security import generate_password_hash, check_password_hash
 app = Flask(__name__)
 app.secret_key = 'ridesmart_secret_key'
 
-# M-Pesa sandbox credentials 
+# M-Pesa sandbox credentials — swap these out for production keys when going live
 MPESA_CONSUMER_KEY = 'B0zxwLToNfvnwXHKfaZL7cf0iADgI93PmIv7pOoEGCFv8DlN'
 MPESA_CONSUMER_SECRET = 'kbtkz4vDFmENujgdeHQ4d0TR8xSsHuWn18Wpn3nnLdvsBx9XoLcIiAGms1wJUn7P'
 MPESA_PASSKEY = "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919"
 MPESA_SHORTCODE = '174379'
 
-# ngrok tunnel URL for the M-Pesa callback
+# ngrok tunnel URL for the M-Pesa callback — update this whenever the tunnel restarts
 NGROK_URL = "https://untying-studio-paparazzi.ngrok-free.dev"
 
-# Hardcoded admin credentials 
+# Hardcoded admin credentials — hashed at startup so the plain PIN never sits in memory
 ADMIN_PHONE = "0712345678"
 ADMIN_PIN_HASH = generate_password_hash("9999")
 
 
 def get_db():
-    # Simple DB factory 
+    # Simple DB factory — nothing fancy, just a fresh connection each time
     return mysql.connector.connect(
         host="localhost",
         user="root",
@@ -514,7 +514,7 @@ def process_booking():
             print(f"[BOOKING] Seat {seat_no} on bus {bus_id} already taken — rejected")
             return redirect(url_for('main_page', booking_error='That seat was just taken. Please select another.'))
 
-    
+        db.start_transaction()
 
         # Clear any stale pending booking for this user before creating a new one
         cursor.execute("DELETE FROM booking WHERE userId = %s AND status = 'Pending'", (user_id,))
