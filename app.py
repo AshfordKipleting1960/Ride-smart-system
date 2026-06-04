@@ -11,22 +11,22 @@ from werkzeug.security import generate_password_hash, check_password_hash
 app = Flask(__name__)
 app.secret_key = 'ridesmart_secret_key'
 
-# M-Pesa sandbox credentials — swap these out for production keys when going live
+# M-Pesa sandbox credentials 
 MPESA_CONSUMER_KEY = 'B0zxwLToNfvnwXHKfaZL7cf0iADgI93PmIv7pOoEGCFv8DlN'
 MPESA_CONSUMER_SECRET = 'kbtkz4vDFmENujgdeHQ4d0TR8xSsHuWn18Wpn3nnLdvsBx9XoLcIiAGms1wJUn7P'
 MPESA_PASSKEY = "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919"
 MPESA_SHORTCODE = '174379'
 
-# ngrok tunnel URL for the M-Pesa callback — update this whenever the tunnel restarts
+# ngrok tunnel URL for the M-Pesa callback 
 NGROK_URL = "https://untying-studio-paparazzi.ngrok-free.dev"
 
-# Hardcoded admin credentials — hashed at startup so the plain PIN never sits in memory
+# Hardcoded admin credentials 
 ADMIN_PHONE = "0712345678"
 ADMIN_PIN_HASH = generate_password_hash("9999")
 
 
 def get_db():
-    # Simple DB factory — nothing fancy, just a fresh connection each time
+    # Simple DB factory 
     return mysql.connector.connect(
         host="localhost",
         user="root",
@@ -89,7 +89,7 @@ def login():
     if len(pin) != 4 or not pin.isdigit():
         return render_template('BusSeatReservationSystem(vs).html', error="PIN must be exactly 4 digits")
 
-    # Admin shortcut — no DB lookup needed
+    # Admin shortcut 
     if phone == ADMIN_PHONE and check_password_hash(ADMIN_PIN_HASH, pin):
         session['user_id'] = 'ADMIN'
         session['user_name'] = 'System Admin'
@@ -146,14 +146,14 @@ def main_page():
         )
         pending_booking = cursor.fetchone()
 
-        # All confirmed bookings for this user — used for ticket display and card highlight
+        # All confirmed bookings for this user
         cursor.execute("""
             SELECT bookingId, userId, busId, seatingno, ticket_ref, amount_paid, status
             FROM booking WHERE userId = %s AND (status = 'Completed' OR status = 'Active' OR status = 'Paid')
         """, (session['user_id'],))
         bookings_list = cursor.fetchall()
 
-        # All active bookings across all users — needed to correctly mark occupied seats
+        # All active bookings across all users 
         cursor.execute("""
             SELECT busId, seatingno
             FROM booking
@@ -212,7 +212,7 @@ def verify_payment(checkout_id):
     )
     res_data = response.json()
 
-    # ResultCode 0 means payment went through — activate all seats tied to this checkout
+    # ResultCode 0 means payment went through 
     if res_data.get('ResultCode') == "0":
         db = get_db()
         cursor = db.cursor()
@@ -242,7 +242,7 @@ def admin_dashboard():
         cursor.execute("SELECT COUNT(*) as total FROM users")
         passenger_count = cursor.fetchone()['total']
 
-        # Only count revenue from paid bookings — Pending doesn't count
+        # Only count revenue from paid bookings 
         cursor.execute("SELECT SUM(amount_paid) as total FROM booking WHERE status IN ('Completed', 'Active', 'Paid')")
         rev_res = cursor.fetchone()
         total_revenue = rev_res['total'] if rev_res['total'] else 0.0
@@ -370,9 +370,28 @@ def cancel_booking(booking_id):
         return redirect(url_for('index'))
     try:
         db = get_db()
-        cursor = db.cursor()
-        # Scoped to the current user so passengers can't cancel each other's bookings
-        cursor.execute("DELETE FROM booking WHERE bookingId = %s AND userId = %s", (booking_id, session['user_id']))
+        cursor = db.cursor(dictionary=True)
+
+        # Fetch the ticket_ref so that one can cancel ALL seats from the same booking group
+        cursor.execute(
+            "SELECT ticket_ref FROM booking WHERE bookingId = %s AND userId = %s",
+            (booking_id, session['user_id'])
+        )
+        row = cursor.fetchone()
+
+        if row and row['ticket_ref']:
+            # Cancel every seat that shares the same ticket reference 
+            cursor.execute(
+                "DELETE FROM booking WHERE ticket_ref = %s AND userId = %s",
+                (row['ticket_ref'], session['user_id'])
+            )
+        else:
+            # Fallback: cancel just this single booking
+            cursor.execute(
+                "DELETE FROM booking WHERE bookingId = %s AND userId = %s",
+                (booking_id, session['user_id'])
+            )
+
         db.commit()
         cursor.close()
         db.close()
@@ -479,46 +498,69 @@ def complete_trip(booking_id):
 
 @app.route('/process_booking', methods=['POST'])
 def process_booking():
+    """
+    FEATURE 2: Multi-seat booking handler.
+
+    The front-end now sends seatingno as a comma-separated string, e.g. "1A,1B,2C".
+    A single checkout_id and ticket_ref covers the whole group, so one M-Pesa prompt
+    is sent for the combined total.  Each individual seat gets its own booking row in
+    the DB (seatingno stays a single value per row), preserving the existing schema.
+
+    Single-seat bookings ("1A") continue to work exactly as before because
+    splitting "1A" on commas still yields ["1A"].
+    """
     if 'user_id' not in session:
         return redirect(url_for('index'))
 
-    user_id = session['user_id']
-    bus_id = request.form.get('busId')
-    seat_no = request.form.get('seatingno')
-    amount = request.form.get('amount_paid')
-    ticket_ref = str(uuid.uuid4())[:8].upper()
+    user_id   = session['user_id']
+    bus_id    = request.form.get('busId')
+    seats_raw = request.form.get('seatingno', '').strip()   
+    amount    = request.form.get('amount_paid')             
 
-    print(f"[BOOKING] Incoming form data: busId={bus_id}, seatingno={seat_no}, amount={amount}, userId={user_id}")
+    # Parse the comma-separated seat list which filters out any empty tokens
+    seat_list = [s.strip() for s in seats_raw.split(',') if s.strip()]
+
+    print(f"[BOOKING] busId={bus_id}, seats={seat_list}, amount={amount}, userId={user_id}")
 
     phone = session.get('user_phone')
     if not phone:
         print("[BOOKING] No phone in session — user needs to log in again")
         return redirect(url_for('index'))
 
-    if not bus_id or not seat_no or not amount:
-        print(f"[BOOKING] Missing required field — busId={bus_id}, seatingno={seat_no}, amount={amount}")
+    if not bus_id or not seat_list or not amount:
+        print(f"[BOOKING] Missing required field — busId={bus_id}, seats={seat_list}, amount={amount}")
         return redirect(url_for('main_page', booking_error='Booking submission incomplete. Please try again.'))
+
+    # Shared reference for the whole group
+    ticket_ref  = str(uuid.uuid4())[:8].upper()
 
     try:
         db = get_db()
         cursor = db.cursor(dictionary=True)
 
-        # Server-side seat conflict check — catches races between concurrent users
+       
+        # Builds a parameterised IN clause that rejects the whole booking if any seat is taken.
+        placeholders = ','.join(['%s'] * len(seat_list))
         cursor.execute(
-            "SELECT bookingId FROM booking WHERE busId = %s AND seatingno = %s AND status IN ('Active', 'Paid', 'Pending')",
-            (bus_id, seat_no)
+            f"SELECT seatingno FROM booking WHERE busId = %s AND seatingno IN ({placeholders}) "
+            f"AND status IN ('Active', 'Paid', 'Pending')",
+            [bus_id] + seat_list
         )
-        if cursor.fetchone():
+        conflicts = cursor.fetchall()
+        if conflicts:
+            taken = ', '.join(r['seatingno'] for r in conflicts)
             cursor.close()
             db.close()
-            print(f"[BOOKING] Seat {seat_no} on bus {bus_id} already taken — rejected")
-            return redirect(url_for('main_page', booking_error='That seat was just taken. Please select another.'))
+            print(f"[BOOKING] Conflict — seat(s) {taken} already taken")
+            return redirect(url_for('main_page',
+                                    booking_error=f'Seat(s) {taken} just got taken. Please select others.'))
 
-        db.start_transaction()
+        #db.start_transaction()
 
-        # Clear any stale pending booking for this user before creating a new one
+        # Clear any stale pending booking for this user before creating new ones
         cursor.execute("DELETE FROM booking WHERE userId = %s AND status = 'Pending'", (user_id,))
 
+        #  M-Pesa STK Push for the combined amount 
         access_token = get_access_token()
         print(f"[MPESA] Access token: {'OK' if access_token else 'FAILED'}")
 
@@ -528,11 +570,12 @@ def process_booking():
             db.close()
             return redirect(url_for('main_page', booking_error='Could not connect to M-Pesa. Please try again.'))
 
-        timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
-        password = generate_password(MPESA_SHORTCODE, MPESA_PASSKEY, timestamp)
+        timestamp      = datetime.now().strftime('%Y%m%d%H%M%S')
+        password       = generate_password(MPESA_SHORTCODE, MPESA_PASSKEY, timestamp)
         formatted_phone = '254' + phone[1:] if phone.startswith('0') else phone
 
         headers = {"Authorization": f"Bearer {access_token}"}
+        seat_desc = ', '.join(seat_list)
         payload = {
             "BusinessShortCode": MPESA_SHORTCODE,
             "Password": password,
@@ -544,7 +587,7 @@ def process_booking():
             "PhoneNumber": formatted_phone,
             "CallBackURL": f"{NGROK_URL}/callback",
             "AccountReference": ticket_ref,
-            "TransactionDesc": f"Seat {seat_no} Booking"
+            "TransactionDesc": f"Seat(s) {seat_desc} Booking"
         }
 
         print(f"[MPESA] STK Push payload: {payload}")
@@ -557,17 +600,26 @@ def process_booking():
 
         checkout_id = res_data.get('CheckoutRequestID')
         if not checkout_id:
-            print(f"[MPESA] No CheckoutRequestID in response — saving anyway: {res_data}")
+            print(f"[MPESA] No CheckoutRequestID — saving anyway: {res_data}")
 
+        
+        # Amount per seat = total / number of seats 
+        fare_per_seat = request.form.get('fare_per_seat', amount)
         sql = """INSERT INTO booking (userId, busId, seatingno, amount_paid, ticket_ref, bookingdate, status, checkout_id)
                  VALUES (%s, %s, %s, %s, %s, %s, 'Pending', %s)"""
-        cursor.execute(sql, (user_id, bus_id, seat_no, amount, ticket_ref, datetime.now(), checkout_id))
+
+        for seat in seat_list:
+            cursor.execute(sql, (user_id, bus_id, seat, fare_per_seat, ticket_ref, datetime.now(), checkout_id))
+
         db.commit()
-        print(f"[BOOKING] Booking saved. ticket_ref={ticket_ref}, checkout_id={checkout_id}, status=Pending")
+        seat_count = len(seat_list)
+        print(f"[BOOKING] {seat_count} seat(s) saved. ticket_ref={ticket_ref}, checkout_id={checkout_id}, status=Pending")
         cursor.close()
         db.close()
 
-        return redirect(url_for('main_page', booking_success=f'M-Pesa prompt sent! Check your phone. Ref: {ticket_ref}'))
+        seats_display = ', '.join(seat_list)
+        return redirect(url_for('main_page',
+                                booking_success=f'M-Pesa prompt sent! {seat_count} seat(s) reserved ({seats_display}). Ref: {ticket_ref}'))
 
     except Exception as e:
         print(f"[BOOKING] Exception: {e}")
@@ -583,8 +635,8 @@ def mpesa_callback():
     data = request.get_json()
     print(f"[CALLBACK] Received: {data}")
     stk_callback = data.get('Body', {}).get('stkCallback', {})
-    result_code = stk_callback.get('ResultCode')
-    checkout_id = stk_callback.get('CheckoutRequestID')
+    result_code  = stk_callback.get('ResultCode')
+    checkout_id  = stk_callback.get('CheckoutRequestID')
 
     print(f"[CALLBACK] ResultCode={result_code}, CheckoutRequestID={checkout_id}")
 
@@ -592,7 +644,7 @@ def mpesa_callback():
         try:
             db = get_db()
             cursor = db.cursor()
-            # One checkout_id covers all seats in the group — flip them all at once
+            # One checkout_id covers all seats in the group
             cursor.execute("UPDATE booking SET status = 'Active' WHERE checkout_id = %s", (checkout_id,))
             db.commit()
             print(f"[CALLBACK] Seats activated for checkout_id={checkout_id}")
