@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ride Smart | Smart Bus Booking</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        /* ── Exact same variables and font as mainpage / dashboards ── */
+        :root {
+            --brand-black: #000000;
+            --brand-orange: #f39c12;
+            --bg-light: #f4f4f4;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 14px;
+            background: #ffffff;
+            color: #111;
+            letter-spacing: -0.01em;
+            margin: 0;
+        }
+
+        /* ── Navbar — same style as mainpage navbar ── */
+        .navbar {
+            background: white;
+            border-bottom: 2px solid var(--brand-black);
+            padding: 15px 0;
+        }
+
+        .navbar-brand {
+            font-weight: 800;
+            font-size: 1.15rem;
+            color: var(--brand-black);
+            text-decoration: none;
+            letter-spacing: -0.03em;
+        }
+
+        .btn-nav-signin {
+            background: var(--brand-black);
+            color: white;
+            font-weight: 800;
+            font-size: 12px;
+            padding: 8px 20px;
+            border-radius: 8px;
+            border: none;
+            text-decoration: none;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+        }
+
+        .btn-nav-signin:hover { background: #333; color: white; }
+
+        /* ── Hero ── */
+        .hero {
+            padding: 100px 0 80px;
+            background: white;
+        }
+
+        .hero-eyebrow {
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #999;
+            margin-bottom: 20px;
+        }
+
+        .hero h1 {
+            font-size: 3.8rem;
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            line-height: 1.05;
+            margin-bottom: 20px;
+        }
+
+        .hero-sub {
+            font-size: 1.05rem;
+            color: #666;
+            font-weight: 500;
+            max-width: 480px;
+            margin-bottom: 36px;
+            line-height: 1.6;
+        }
+
+        .btn-hero-primary {
+            background: var(--brand-black);
+            color: white;
+            font-weight: 800;
+            font-size: 13px;
+            padding: 14px 32px;
+            border-radius: 10px;
+            border: none;
+            text-decoration: none;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+            display: inline-block;
+        }
+
+        .btn-hero-primary:hover { background: #222; color: white; }
+
+        .btn-hero-secondary {
+            background: transparent;
+            color: var(--brand-black);
+            font-weight: 800;
+            font-size: 13px;
+            padding: 14px 32px;
+            border-radius: 10px;
+            border: 2px solid #e0e0e0;
+            text-decoration: none;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+            display: inline-block;
+        }
+
+        .btn-hero-secondary:hover { border-color: var(--brand-black); color: var(--brand-black); }
+
+        /* Simple bus seat preview visual */
+        .hero-visual {
+            background: var(--bg-light);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid #eee;
+        }
+
+        .mini-bus-frame {
+            background: white;
+            border: 2px solid #eee;
+            border-radius: 30px 30px 10px 10px;
+            padding: 20px 16px;
+            max-width: 220px;
+            margin: 0 auto;
+        }
+
+        .mini-seat-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+        }
+
+        .mini-seat {
+            height: 32px;
+            border-radius: 6px;
+            background: white;
+            border: 1.5px solid #e0e0e0;
+        }
+
+        .mini-seat.taken { background: var(--brand-orange); border-color: var(--brand-orange); }
+        .mini-seat.selected { background: var(--brand-black); border-color: var(--brand-black); }
+        .mini-seat.empty { background: #f4f4f4; border-color: #eee; }
+
+        .hero-stat {
+            text-align: center;
+            padding: 16px;
+        }
+
+        .hero-stat-num {
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -0.04em;
+        }
+
+        .hero-stat-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #999;
+        }
+
+        /* ── Features Section ── */
+        .features-section {
+            background: var(--bg-light);
+            padding: 80px 0;
+        }
+
+        .section-label {
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #999;
+            margin-bottom: 12px;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            margin-bottom: 8px;
+        }
+
+        .section-sub {
+            color: #777;
+            font-size: 14px;
+            font-weight: 500;
+            max-width: 440px;
+            margin-bottom: 50px;
+        }
+
+        .feature-card {
+            background: white;
+            border-radius: 16px;
+            padding: 28px;
+            border: 1.2px solid #eee;
+            height: 100%;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+        }
+
+        .feature-icon {
+            width: 44px;
+            height: 44px;
+            background: #f4f4f4;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            margin-bottom: 16px;
+            color: var(--brand-black);
+        }
+
+        .feature-card h6 {
+            font-weight: 800;
+            font-size: 14px;
+            letter-spacing: -0.01em;
+            margin-bottom: 8px;
+        }
+
+        .feature-card p {
+            font-size: 13px;
+            color: #777;
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        /* ── CTA Section ── */
+        .cta-section {
+            padding: 80px 0;
+            background: white;
+        }
+
+        .cta-box {
+            background: var(--brand-black);
+            border-radius: 24px;
+            padding: 60px 50px;
+            text-align: center;
+            color: white;
+        }
+
+        .cta-box h2 {
+            font-size: 2.4rem;
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            margin-bottom: 12px;
+        }
+
+        .cta-box p {
+            color: rgba(255,255,255,0.65);
+            font-size: 14px;
+            margin-bottom: 32px;
+        }
+
+        .btn-cta {
+            background: white;
+            color: var(--brand-black);
+            font-weight: 800;
+            font-size: 13px;
+            padding: 14px 36px;
+            border-radius: 10px;
+            border: none;
+            text-decoration: none;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+            display: inline-block;
+        }
+
+        .btn-cta:hover { background: #f0f0f0; color: var(--brand-black); }
+
+        /* ── Footer — same border style as navbar ── */
+        footer {
+            border-top: 2px solid #000;
+            padding: 30px 0;
+            background: white;
+        }
+
+        footer .brand {
+            font-weight: 800;
+            font-size: 1rem;
+            letter-spacing: -0.03em;
+        }
+
+        footer p {
+            font-size: 12px;
+            color: #999;
+            margin: 0;
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2.4rem; }
+            .cta-box { padding: 40px 24px; }
+            .cta-box h2 { font-size: 1.8rem; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ── Navbar ── -->
+<nav class="navbar">
+    <div class="container d-flex justify-content-between align-items-center">
+        <a class="navbar-brand" href="#">RIDESMART NAIROBI</a>
+        <div class="d-flex gap-2 align-items-center">
+            <a href="{{ url_for('index') }}" class="btn-nav-signin">Sign In</a>
+        </div>
+    </div>
+</nav>
+
+<!-- ── Hero ── -->
+<section class="hero">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6">
+                <p class="hero-eyebrow">Public Bus Reservation — Nairobi</p>
+                <h1>Ride<span style="color: var(--brand-orange);">Smart.</span><br>Book before<br>you board.</h1>
+                <p class="hero-sub">Select your seat, pay via M-Pesa, and travel with confidence. No queues. No cash. Just your seat, confirmed.</p>
+                <div class="d-flex gap-3 flex-wrap">
+                    <a href="{{ url_for('index') }}" class="btn-hero-primary">Get Started</a>
+                    <a href="#features" class="btn-hero-secondary">See Features</a>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="hero-visual">
+                    <p class="section-label text-center mb-3">Live Seat View</p>
+                    <div class="mini-bus-frame shadow-sm">
+                        <div class="mini-seat-grid">
+                            <div class="mini-seat"></div>
+                            <div class="mini-seat"></div>
+                            <div class="mini-seat taken"></div>
+                            <div class="mini-seat taken"></div>
+
+                            <div class="mini-seat"></div>
+                            <div class="mini-seat selected"></div>
+                            <div class="mini-seat taken"></div>
+                            <div class="mini-seat"></div>
+
+                            <div class="mini-seat taken"></div>
+                            <div class="mini-seat taken"></div>
+                            <div class="mini-seat"></div>
+                            <div class="mini-seat"></div>
+
+                            <div class="mini-seat"></div>
+                            <div class="mini-seat"></div>
+                            <div class="mini-seat taken"></div>
+                            <div class="mini-seat taken"></div>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
+                        <div class="col-4">
+                            <div class="hero-stat">
+                                <div class="hero-stat-num">14+</div>
+                                <div class="hero-stat-label">Buses</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="hero-stat">
+                                <div class="hero-stat-num" style="color: var(--brand-orange);">4</div>
+                                <div class="hero-stat-label">Routes</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="hero-stat">
+                                <div class="hero-stat-num">M-Pesa</div>
+                                <div class="hero-stat-label">Payment</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ── Features ── -->
+<section id="features" class="features-section">
+    <div class="container">
+        <p class="section-label">What Ride Smart Does</p>
+        <h2 class="section-title">Everything you need<br>to travel smarter.</h2>
+        <p class="section-sub">Built for short-distance SACCO buses. Designed for daily commuters.</p>
+
+        <div class="row g-3">
+            <div class="col-md-3 col-sm-6">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="bi bi-grid-3x3-gap-fill"></i></div>
+                    <h6>Seat Reservation</h6>
+                    <p>Pick your exact seat before you reach the stage. Available seats shown in real-time.</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="bi bi-signpost-2-fill"></i></div>
+                    <h6>Route Selection</h6>
+                    <p>Search by pickup and destination. Only buses on your route are shown.</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="bi bi-phone-fill"></i></div>
+                    <h6>M-Pesa Payment</h6>
+                    <p>Pay directly from your phone via M-Pesa STK Push. No cash. No queues.</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="bi bi-ticket-perforated-fill"></i></div>
+                    <h6>Digital Ticket</h6>
+                    <p>Get a booking confirmation with your seat number and reference code instantly.</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="bi bi-person-circle"></i></div>
+                    <h6>Profile Management</h6>
+                    <p>Update your name, email, and phone number anytime without losing your bookings.</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="bi bi-speedometer2"></i></div>
+                    <h6>Admin Dashboard</h6>
+                    <p>Fleet managers track buses, bookings, revenue, and passengers in one place.</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="bi bi-shield-lock-fill"></i></div>
+                    <h6>Secure Login</h6>
+                    <p>Phone number and 4-digit PIN with hashed storage. Your account stays protected.</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="bi bi-file-earmark-spreadsheet-fill"></i></div>
+                    <h6>Reports & Export</h6>
+                    <p>Admins can export full booking reports to Excel with one click.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ── CTA ── -->
+<section class="cta-section">
+    <div class="container">
+        <div class="cta-box">
+            <h2>Ready to move?</h2>
+            <p>Join commuters across Nairobi who book their seat before they leave the house.</p>
+            <a href="{{ url_for('index') }}" class="btn-cta">Book Your Seat Now</a>
+        </div>
+    </div>
+</section>
+
+<!-- ── Footer ── -->
+<footer>
+    <div class="container d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <span class="brand">RIDESMART NAIROBI</span>
+        <p>&copy; 2026 Public Bus Reservation System. Built for urban mobility.</p>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
