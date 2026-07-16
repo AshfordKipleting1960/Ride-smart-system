@@ -1,6 +1,6 @@
 # RideSmart Bus Reservation System
 
-RideSmart is a web-based bus reservation system developed as a final year Computer Science project. The system allows passengers to search available routes, reserve seats, make payments through M-Pesa, and receive digital tickets. It also provides an admin dashboard for managing buses, routes, bookings, and reports.
+RideSmart is a web-based bus reservation system developed as my final year Computer Science project. The system allows passengers to search available routes, reserve seats, make payments through M-Pesa, and receive digital tickets. It also provides an admin dashboard for managing buses, routes, bookings, and reports.
 
 ## Features
 
