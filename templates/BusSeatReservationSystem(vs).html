@@ -8,233 +8,312 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <style>
-        :root {
-            --brand-black: #000000;
-            --brand-muted: #999999;
+        /* Brand colors used across the page */
+        :root { --brand-black: #000000; --brand-muted: #999999; }
+
+        body, html {
+            height: 100%; margin: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 14px; overflow-x: hidden; letter-spacing: -0.01em;
         }
 
-        body, html { 
-            height: 100%; 
-            margin: 0; 
-            font-family: 'Plus Jakarta Sans', sans-serif; 
-            font-size: 14px; /* Admin/Main page base size */
-            overflow-x: hidden; 
-            letter-spacing: -0.01em;
-        }
-
+        /* Splits the page into two equal halves */
         .split-container { display: flex; height: 100vh; width: 100%; }
-        
-        .side-image { 
-            flex: 1; 
-            background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&q=80&w=2017'); 
-            background-size: cover; 
-            background-position: center; 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: flex-end; 
-            padding: 60px; 
-            color: white; 
+
+        /* Left side — shows the bus image with a dark overlay and testimonials */
+        .side-image {
+            flex: 1;
+            background: linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)),
+                        url('https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&q=80&w=2017');
+            background-size: cover; background-position: center;
+            display: flex; flex-direction: column;
+            justify-content: space-between; padding: 50px; color: white;
         }
 
+        .brand-mark .logo-name {
+            font-size: 1.6rem; font-weight: 800; letter-spacing: -0.04em; line-height: 1;
+        }
+        .brand-mark .logo-tagline {
+            font-size: 11px; font-weight: 600; letter-spacing: 0.12em;
+            text-transform: uppercase; opacity: 0.6; margin-top: 5px;
+        }
+
+        /* Makes the testimonial text fade in and out smoothly */
         .quote-box { transition: opacity 0.8s ease-in-out; min-height: 150px; }
-        
-        .side-form { flex: 1; display: flex; align-items: center; justify-content: center; background: white; padding: 40px; position: relative; }
-        .form-content { width: 100%; max-width: 410px; transition: all 0.3s ease; }
-        
-        /* Heading Styles */
-        h2.fw-bold { 
-            font-size: 1.75rem; 
-            letter-spacing: -0.04em; 
-            font-weight: 800 !important;
-            margin-bottom: 8px;
+
+        /* Right side — holds the login and signup forms */
+        .side-form {
+            flex: 1; display: flex; align-items: center; justify-content: center;
+            background: white; padding: 40px; position: relative; overflow-y: auto;
         }
 
-        .text-muted { font-size: 14px; }
+        .form-content { width: 100%; max-width: 410px; }
 
-        /* Input Styles */
-        .form-control, .form-select { 
-            height: 52px; 
-            border: 1.5px solid #eee; 
-            border-radius: 10px; 
-            margin-bottom: 5px; 
-            font-size: 14px; 
-            font-weight: 500;
+        /* Branding shown above the form on desktop screens */
+        .form-brand-desktop {
+            margin-bottom: 26px;
+            padding-bottom: 20px;
+            border-bottom: 1.5px solid #f0f0f0;
+        }
+        .form-brand-desktop .logo-name {
+            font-size: 1.9rem; font-weight: 800; letter-spacing: -0.05em; line-height: 1; color: #000;
+        }
+        .form-brand-desktop .logo-tagline {
+            font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
+            text-transform: uppercase; color: #bbb; margin-top: 5px;
         }
 
+        /* Branding shown above the form on mobile screens (hidden by default) */
+        .form-brand-mobile {
+            display: none;
+            margin-bottom: 28px; padding-bottom: 22px; border-bottom: 2px solid #000;
+        }
+        .form-brand-mobile .logo-name {
+            font-size: 1.6rem; font-weight: 800; letter-spacing: -0.04em; color: #000;
+        }
+        .form-brand-mobile .logo-tagline {
+            font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
+            text-transform: uppercase; color: #999; margin-top: 4px;
+        }
+
+        h2.fw-bold { font-size: 1.6rem; letter-spacing: -0.04em; font-weight: 800 !important; margin-bottom: 6px; }
+        .text-muted { font-size: 13px; }
+
+        /* Style for all form inputs and dropdowns */
+        .form-control, .form-select {
+            height: 52px; border: 1.5px solid #eee; border-radius: 10px;
+            margin-bottom: 5px; font-size: 14px; font-weight: 500;
+            background: #fafafa; transition: border-color 0.2s, background 0.2s;
+        }
+        /* Dark border when the user clicks into an input */
+        .form-control:focus, .form-select:focus { border-color: #000; background: #fff; box-shadow: none; }
         .form-control::placeholder { color: #ccc; font-weight: 400; }
 
-        /* Label and Hint Styles (Admin Style) */
-        .security-spacer p.small, .validation-hint { 
-            font-size: 11px !important; 
-            font-weight: 800; 
-            text-transform: uppercase; 
-            letter-spacing: 0.05em;
+        /* Separates the PIN field from personal details on the signup form */
+        .security-spacer { margin-top: 20px; border-top: 1px solid #f0f0f0; padding-top: 15px; }
+        .security-spacer p.small { font-size: 11px !important; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
+
+        /* Main black button used for Sign In and Create Account */
+        .btn-black {
+            background: #000; color: white; height: 55px; width: 100%;
+            border-radius: 10px; font-weight: 800; font-size: 13px;
+            text-transform: uppercase; letter-spacing: 0.04em;
+            margin-top: 10px; border: none; transition: opacity 0.2s, background 0.2s;
         }
+        /* Slightly lighter black when hovering over the button */
+        .btn-black:hover:not(:disabled) { background: #222; }
+        /* Faded out when the button is disabled */
+        .btn-black:disabled { opacity: 0.45; cursor: not-allowed; }
 
-        .security-spacer { margin-top: 25px; border-top: 1px solid #f8f8f8; padding-top: 15px; }
+        /* Used to show or hide entire sections */
+        .hidden { display: none !important; }
 
-        /* Button Styles */
-        .btn-black { 
-            background: #000; 
-            color: white; 
-            height: 55px; 
-            width: 100%; 
-            border-radius: 10px; 
-            font-weight: 800; 
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 0.02em;
-            margin-top: 10px; 
-            border: none; 
-            transition: opacity 0.2s;
-        }
-
-        .btn-black:disabled { opacity: 0.6; cursor: not-allowed; }
-        
-        .hidden { display: none !important; } 
-        
+        /* Green checkmark overlay shown after successful signup */
         .success-overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: white;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            z-index: 1000;
-            padding: 40px;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: white; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; text-align: center; z-index: 1000; padding: 40px;
         }
-
         .success-icon { font-size: 4rem; color: #198754; margin-bottom: 20px; }
 
-        .validation-hint { margin-bottom: 12px; display: flex; align-items: center; gap: 5px; }
+        /* Shows whether a field is valid (green) or invalid (red) */
+        .validation-hint {
+            font-size: 11px !important; font-weight: 800;
+            text-transform: uppercase; letter-spacing: 0.05em;
+            display: flex; align-items: center; gap: 5px; margin-bottom: 12px;
+        }
         .text-invalid { color: #dc3545; }
-        .text-valid { color: #198754; }
+        .text-valid   { color: #198754; }
 
-        .error-text { 
-            font-size: 11px; 
-            font-weight: 700; 
-            color: #dc3545; 
-            display: block; 
-            margin-bottom: 10px; 
-            text-transform: uppercase; 
+        /* Error message shown when login fails */
+        .error-text {
+            font-size: 11px; font-weight: 700; color: #dc3545;
+            display: block; margin-bottom: 10px;
+            text-transform: uppercase; letter-spacing: 0.02em;
         }
 
-        @media (max-width: 992px) { .side-image { display: none; } }
+        /* The "New here?" and "Already have an account?" links */
+        .form-divider { text-align: center; margin-top: 18px; font-size: 13px; color: #999; }
+        .form-divider a { color: #000; font-weight: 700; text-decoration: none; }
+        .form-divider a:hover { text-decoration: underline; }
+
+        /* On tablets and phones, hide the image panel and show the mobile brand */
+        @media (max-width: 992px) {
+            .side-image          { display: none; }
+            .form-brand-mobile   { display: block; }
+            .form-brand-desktop  { display: none !important; }
+        }
     </style>
 </head>
 <body>
-    <div class="split-container">
-        <div class="side-image">
-            <div id="quoteContainer" class="quote-box">
-                <p id="dynamicQuote" style="font-size: 1.6rem; font-weight: 700; letter-spacing: -0.03em;">"Ride Smart has completely changed how I move around the city."</p>
-                <p id="dynamicAuthor" class="fw-bold mb-0" style="font-size: 14px;">Jane Wambui</p>
-                <p id="dynamicRole" class="opacity-75" style="font-size: 12px;">Daily Commuter, Nairobi</p>
-            </div>
-        </div>
+<div class="split-container">
 
-        <div class="side-form">
-            <div id="successMessage" class="success-overlay hidden">
-                <i class="bi bi-check-circle-fill success-icon"></i>
-                <h2 class="fw-bold">Account Created!</h2>
-                <p class="text-muted">Welcome to Ride Smart. Sending your details to the database...</p>
-            </div>
-
-            <div id="loginForm" class="form-content">
-                <h2 class="fw-bold">Welcome back!</h2>
-                <p class="text-muted mb-4">Please enter your details to sign in.</p>
-                
-                <form action="/login" method="POST" id="mainLoginForm">
-                    <input type="tel" id="loginPhone" name="phone_number" class="form-control" placeholder="Phone number (e.g. 07...)" pattern="[0-9]{10}" maxlength="10" required>
-                    <div id="phoneHint" class="validation-hint text-invalid"><i id="phoneIcon" class="bi bi-x-circle"></i> Must be 10 digits</div>
-                    
-                    <input type="password" id="loginPin" name="user_pin" class="form-control" placeholder="4-Digit PIN" maxlength="4" required>
-                    <div id="pinHint" class="validation-hint text-invalid"><i id="pinIcon" class="bi bi-x-circle"></i> Must be 4 digits</div>
-                    
-                    {% if error %}
-                    <span class="error-text"><i class="bi bi-exclamation-circle me-1"></i> {{ error }}</span>
-                    {% endif %}
-                    
-                    <button type="submit" id="loginSubmit" class="btn btn-black" disabled>Sign in</button>
-                </form>
-                <p class="text-center mt-4" style="font-size: 13px;">New here? <a href="javascript:void(0)" onclick="toggleForms()" class="text-dark fw-bold">Create account</a></p>
-            </div>
-
-            <div id="signupForm" class="form-content hidden">
-                <h2 class="fw-bold">Create account</h2>
-                <p class="text-muted mb-4">Join 10,000+ commuters today.</p>
-                <form id="registrationForm" action="/signup" method="POST" onsubmit="showSuccess()">
-                    <div class="row g-2">
-                        <div class="col"><input type="text" name="fname" class="form-control" placeholder="First name" required></div>
-                        <div class="col"><input type="text" name="lname" class="form-control" placeholder="Last name" required></div>
-                    </div>
-                    <input type="tel" name="phone_number" class="form-control" placeholder="M-Pesa Number (10 digits)" pattern="[0-9]{10}" required>
-                    <input type="email" name="email" class="form-control" placeholder="Email Address" required>
-                    <select name="gender" class="form-select" required>
-                        <option value="" disabled selected>Select Gender</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                        <option value="Other">Other</option>
-                    </select>
-                    <div class="security-spacer">
-                        <p class="small text-muted mb-2 fw-bold">Account Security</p>
-                        <input type="password" name="user_pin" class="form-control" placeholder="Set 4-Digit PIN" maxlength="4" required>
-                    </div>
-                    <button type="submit" class="btn btn-black">Create account</button>
-                </form>
-                <p class="text-center mt-4" style="font-size: 13px;">Already have an account? <a href="javascript:void(0)" onclick="toggleForms()" class="text-dark fw-bold">Sign in</a></p>
-            </div>
+    <!-- Left panel: bus image with rotating customer testimonials -->
+    <div class="side-image">
+       
+        <div id="quoteContainer" class="quote-box">
+            <p id="dynamicQuote" style="font-size:1.55rem;font-weight:700;letter-spacing:-0.03em;line-height:1.25;">
+                "Ride Smart has completely changed how I move around the city."
+            </p>
+            <p id="dynamicAuthor" class="fw-bold mb-0" style="font-size:14px;">Jane Wambui</p>
+            <p id="dynamicRole" style="opacity:0.65;font-size:12px;">Daily Commuter, Nairobi</p>
         </div>
     </div>
 
-    <script>
-        function toggleForms() {
-            document.getElementById('loginForm').classList.toggle('hidden');
-            document.getElementById('signupForm').classList.toggle('hidden');
-        }
+    <!-- Right panel: contains both the login and signup forms -->
+    <div class="side-form">
 
-        function showSuccess() {
-            document.getElementById('signupForm').classList.add('hidden');
-            document.getElementById('successMessage').classList.remove('hidden');
-        }
+        <!-- Success message shown briefly after creating an account -->
+        <div id="successMessage" class="success-overlay hidden">
+            <i class="bi bi-check-circle-fill success-icon"></i>
+            <h2 class="fw-bold">Account Created!</h2>
+            <p class="text-muted">Welcome to Ride Smart. Redirecting you to sign in…</p>
+        </div>
 
-        const loginPhone = document.getElementById('loginPhone');
-        const loginPin = document.getElementById('loginPin');
-        const loginSubmit = document.getElementById('loginSubmit');
+        <!-- LOGIN FORM — shown by default -->
+        <div id="loginForm" class="form-content">
+            <div class="form-brand-mobile">
+                <div class="logo-name">RideSmart</div>
+                <div class="logo-tagline">Smart Bus Booking · Nairobi</div>
+            </div>
+            <div class="form-brand-desktop">
+                <div class="logo-name">RideSmart</div>
+                <div class="logo-tagline">Smart Bus Booking · Nairobi</div>
+            </div>
 
-        function validate() {
-            const pValid = loginPhone.value.length === 10;
-            const pinValid = loginPin.value.length === 4;
-            document.getElementById('phoneHint').className = pValid ? 'validation-hint text-valid' : 'validation-hint text-invalid';
-            document.getElementById('phoneIcon').className = pValid ? 'bi bi-check-circle' : 'bi bi-x-circle';
-            document.getElementById('pinHint').className = pinValid ? 'validation-hint text-valid' : 'validation-hint text-invalid';
-            document.getElementById('pinIcon').className = pinValid ? 'bi bi-check-circle' : 'bi bi-x-circle';
-            loginSubmit.disabled = !(pValid && pinValid);
-        }
+            <h2 class="fw-bold">Welcome back!</h2>
+            <p class="text-muted mb-4">Enter your details to sign in to your account.</p>
 
-        loginPhone.addEventListener('input', validate);
-        loginPin.addEventListener('input', validate);
+            <form action="/login" method="POST" id="mainLoginForm">
+                <input type="tel" id="loginPhone" name="phone_number" class="form-control"
+                       placeholder="Phone number (e.g. 07...)" pattern="[0-9]{10}" maxlength="10" required>
+                <!-- Shows a red X until the phone number is 10 digits, then turns green -->
+                <div id="phoneHint" class="validation-hint text-invalid">
+                    <i id="phoneIcon" class="bi bi-x-circle"></i> Must be 10 digits
+                </div>
 
-        const testimonials = [
-            {quote: '"Ride Smart has completely changed how I move around the city."', author: "Jane Wambui", role: "Daily Commuter, Nairobi"}, 
-            {quote: '"Finally, a reliable way to book my seat before I even leave the house."', author: "David Maina", role: "Business Executive"}, 
-            {quote: '"No more carrying exact change. The M-Pesa integration is seamless."', author: "Sarah Cherono", role: "University Student"}
-        ];
-        let idx = 0;
-        
-        setInterval(() => {
-            const container = document.getElementById('quoteContainer');
-            if(!container) return;
-            container.style.opacity = 0;
-            setTimeout(() => {
-                idx = (idx + 1) % testimonials.length;
-                document.getElementById('dynamicQuote').innerText = testimonials[idx].quote;
-                document.getElementById('dynamicAuthor').innerText = testimonials[idx].author;
-                document.getElementById('dynamicRole').innerText = testimonials[idx].role;
-                container.style.opacity = 1;
-            }, 800);
-        }, 5000);
-    </script>
+                <input type="password" id="loginPin" name="user_pin" class="form-control"
+                       placeholder="4-Digit PIN" maxlength="4" required>
+                <!-- Shows a red X until the PIN is 4 digits, then turns green -->
+                <div id="pinHint" class="validation-hint text-invalid">
+                    <i id="pinIcon" class="bi bi-x-circle"></i> Must be 4 digits
+                </div>
+
+                <!-- Flask inserts error messages here when login fails -->
+                {% if error %}
+                <span class="error-text"><i class="bi bi-exclamation-circle me-1"></i>{{ error }}</span>
+                {% endif %}
+
+                <!-- Button is disabled until both phone and PIN are valid -->
+                <button type="submit" id="loginSubmit" class="btn btn-black" disabled>Sign In</button>
+            </form>
+            <!-- Link to switch to the signup form -->
+            <p class="form-divider">New here? <a href="javascript:void(0)" onclick="toggleForms()">Create account</a></p>
+        </div>
+
+        <!-- SIGNUP FORM — hidden by default, shown when "Create account" is clicked -->
+        <div id="signupForm" class="form-content hidden">
+            <div class="form-brand-mobile">
+                <div class="logo-name">RideSmart</div>
+                <div class="logo-tagline">Smart Bus Booking · Nairobi</div>
+            </div>
+            <div class="form-brand-desktop">
+                <div class="logo-name">RideSmart</div>
+                <div class="logo-tagline">Smart Bus Booking · Nairobi</div>
+            </div>
+
+            <h2 class="fw-bold">Create account</h2>
+            <p class="text-muted mb-4">Join commuters across Nairobi today.</p>
+
+            <form id="registrationForm" action="/signup" method="POST" onsubmit="showSuccess()">
+                <!-- First and last name side by side -->
+                <div class="row g-2">
+                    <div class="col"><input type="text" name="fname" class="form-control" placeholder="First name" required></div>
+                    <div class="col"><input type="text" name="lname" class="form-control" placeholder="Last name" required></div>
+                </div>
+                <input type="tel" name="phone_number" class="form-control mt-2"
+                       placeholder="M-Pesa Number (10 digits)" pattern="[0-9]{10}" required>
+                <input type="email" name="email" class="form-control mt-2" placeholder="Email Address" required>
+                <select name="gender" class="form-select mt-2" required>
+                    <option value="" disabled selected>Select Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                </select>
+                <!-- PIN field separated from personal info for visual clarity -->
+                <div class="security-spacer">
+                    <p class="small text-muted mb-2 fw-bold">Account Security</p>
+                    <input type="password" name="user_pin" class="form-control"
+                           placeholder="Set 4-Digit PIN" maxlength="4" required>
+                </div>
+                <button type="submit" class="btn btn-black mt-2">Create Account</button>
+            </form>
+            <!-- Link to switch back to the login form -->
+            <p class="form-divider">Already have an account? <a href="javascript:void(0)" onclick="toggleForms()">Sign in</a></p>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // Switches between the login form and the signup form
+    function toggleForms() {
+        document.getElementById('loginForm').classList.toggle('hidden');
+        document.getElementById('signupForm').classList.toggle('hidden');
+    }
+
+    // Shows the green success message after the signup form is submitted
+    function showSuccess() {
+        document.getElementById('signupForm').classList.add('hidden');
+        document.getElementById('successMessage').classList.remove('hidden');
+    }
+
+    const loginPhone  = document.getElementById('loginPhone');
+    const loginPin    = document.getElementById('loginPin');
+    const loginSubmit = document.getElementById('loginSubmit');
+
+    // Checks if both the phone number and PIN are filled in correctly
+    function validate() {
+        const pValid   = loginPhone.value.length === 10;
+        const pinValid = loginPin.value.length === 4;
+        // Turn the phone hint green or red depending on validity
+        document.getElementById('phoneHint').className = pValid ? 'validation-hint text-valid' : 'validation-hint text-invalid';
+        document.getElementById('phoneIcon').className = pValid ? 'bi bi-check-circle' : 'bi bi-x-circle';
+        // Turn the PIN hint green or red depending on validity
+        document.getElementById('pinHint').className   = pinValid ? 'validation-hint text-valid' : 'validation-hint text-invalid';
+        document.getElementById('pinIcon').className   = pinValid ? 'bi bi-check-circle' : 'bi bi-x-circle';
+        // Only enable the Sign In button when both fields are valid
+        loginSubmit.disabled = !(pValid && pinValid);
+    }
+
+    // Run validation every time the user types in either field
+    loginPhone.addEventListener('input', validate);
+    loginPin.addEventListener('input',   validate);
+
+    // Three testimonials that rotate on the left panel
+    const testimonials = [
+        { quote: '"Ride Smart has completely changed how I move around the city."',      author: 'Jane Wambui',   role: 'Daily Commuter, Nairobi' },
+        { quote: '"Finally, a reliable way to book my seat before I even leave the house."', author: 'David Maina',   role: 'Business Executive' },
+        { quote: '"No more carrying exact change. The M-Pesa integration is seamless."', author: 'Sarah Cherono', role: 'University Student' }
+    ];
+    let idx = 0;
+
+    // Rotate the testimonials every 5 seconds with a fade effect
+    setInterval(() => {
+        const container = document.getElementById('quoteContainer');
+        if (!container) return;
+        // Fade out
+        container.style.opacity = 0;
+        setTimeout(() => {
+            // Move to the next testimonial, loop back to the start after the last one
+            idx = (idx + 1) % testimonials.length;
+            document.getElementById('dynamicQuote').innerText  = testimonials[idx].quote;
+            document.getElementById('dynamicAuthor').innerText = testimonials[idx].author;
+            document.getElementById('dynamicRole').innerText   = testimonials[idx].role;
+            // Fade back in
+            container.style.opacity = 1;
+        }, 800);
+    }, 5000);
+</script>
 </body>
 </html>
