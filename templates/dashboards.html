@@ -1,253 +1,212 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ride Smart Admin - Dashboard</title>
-    
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
     <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
-
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
 
     <style>
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #f8f9fa;
-            margin: 0;
-            padding: 0;
-            font-size: 0.85rem; 
-        }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f2f2f2; margin: 0; padding: 0; font-size: 0.85rem; }
+        /* Wraps the sidebar and main content side by side */
+        .admin-wrapper { display: flex; min-height: 100vh; }
 
-        .admin-wrapper {
-            display: flex;
-            min-height: 100vh;
-        }
+        /* Black sidebar that stays fixed on the left */
+        .sidebar { width: 250px; background: #000; color: white; padding: 30px 15px; display: flex; flex-direction: column; position: fixed; height: 100vh; z-index: 1000; }
+        .sidebar h4 { font-size: 1.1rem; font-weight: 700; margin-bottom: 30px; letter-spacing: -0.5px; }
+        /* Sidebar navigation links */
+        .nav-link { color: rgba(255,255,255,0.7); padding: 10px 12px; border-radius: 6px; margin-bottom: 5px; transition: 0.3s; text-decoration: none; cursor: pointer; display: block; font-size: 0.85rem; }
+        /* Highlight the active or hovered nav link */
+        .nav-link:hover, .nav-link.active { background: rgba(255,255,255,0.1); color: white; }
+        /* Red sign-out button at the bottom of the sidebar */
+        .nav-link-signout { color: #f87171; padding: 10px 12px; border-radius: 6px; margin-bottom: 5px; transition: background 0.2s; font-size: 0.85rem; cursor: pointer; background: none; border: none; width: 100%; text-align: left; font-family: inherit; }
+        .nav-link-signout:hover { background: rgba(255,100,100,0.15); color: #fca5a5; }
 
-        .sidebar {
-            width: 250px;
-            background: #000;
-            color: white;
-            padding: 30px 15px;
-            display: flex;
-            flex-direction: column;
-            position: fixed;
-            height: 100vh;
-            z-index: 1000;
-        }
+        /* Main content area — pushed to the right of the sidebar */
+        .main-content { flex: 1; padding: 30px; margin-left: 250px; }
+        h2.fw-bold { font-size: 1.4rem; }
 
-        .sidebar h4 {
-            font-size: 1.1rem;
-            font-weight: 700;
-            margin-bottom: 30px;
-            letter-spacing: -0.5px;
-        }
+        /* Cards that show key numbers like bus count and revenue */
+        .stat-card { background: white; padding: 20px; border-radius: 14px; border: 1px solid #e8e8e8; transition: 0.2s; box-shadow: 0 2px 12px rgba(0,0,0,0.04); }
+        /* Slight lift effect when hovering over a stat card */
+        .stat-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.08); transform: translateY(-2px); }
+        .stat-card h3 { font-size: 1.4rem; }
+        .stat-card p  { font-size: 0.7rem; }
 
-        .nav-link {
-            color: rgba(255, 255, 255, 0.7);
-            padding: 10px 12px;
-            border-radius: 6px;
-            margin-bottom: 5px;
-            transition: 0.3s;
-            text-decoration: none;
-            cursor: pointer;
-            display: block;
-            font-size: 0.85rem;
-        }
+        /* White containers that hold tables */
+        .table-container { background: white; border-radius: 14px; padding: 18px; margin-top: 25px; border: 1px solid #e8e8e8; box-shadow: 0 2px 12px rgba(0,0,0,0.03); }
+        .table { font-size: 0.8rem; }
 
-        .nav-link:hover, .nav-link.active {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-        }
+        .btn-black { background: #000; color: white; border-radius: 8px; padding: 8px 16px; border: none; font-size: 0.8rem; transition: background 0.2s; }
+        .btn-black:hover { background: #222; color: white; }
+        .badge { font-size: 0.7rem; }
 
-        .main-content {
-            flex: 1;
-            padding: 30px;
-            margin-left: 250px;
-        }
+        /* Only one section is visible at a time */
+        .content-section { display: none; }
+        .content-section.active { display: block; }
 
-        h2.fw-bold {
-            font-size: 1.4rem;
-        }
+        #leafletMap { height: 350px; width: 100%; border-radius: 12px; z-index: 1; }
+        .route-info-panel h5 { font-size: 0.9rem; }
+        /* Colored tags showing each bus plate number */
+        .bus-tag { padding: 3px 10px; border-radius: 15px; font-size: 0.75rem; font-weight: 600; display: inline-block; margin-right: 5px; color: white; }
+        /* Hide the default Leaflet routing instructions panel */
+        .leaflet-routing-container { display: none; }
+        .bus-legend { margin-top: 20px; }
+        .bus-legend-title { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: #999; margin-bottom: 10px; }
+        .legend-item-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 0.78rem; font-weight: 600; }
+        /* Small colored circle in the legend */
+        .legend-color-dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+        /* Colored left border added by JavaScript for each bus card */
+        .bus-container-colored { border-left-width: 4px !important; border-left-style: solid !important; }
 
-        .stat-card {
-            background: white;
-            padding: 18px;
-            border-radius: 12px;
-            border: 1.2px solid #eee;
-            transition: 0.3s;
-        }
+        /* Rounded corners for the sign-out popup */
+        .signout-modal-content { border-radius: 20px !important; border: 0 !important; box-shadow: 0 20px 60px rgba(0,0,0,0.15); }
 
-        .stat-card h3 {
-            font-size: 1.25rem;
+        /* Thin progress bar showing how full a bus is */
+        .admin-capacity-bar {
+            height: 4px; background: #f0f0f0; border-radius: 4px;
+            overflow: hidden; margin-top: 6px; min-width: 80px;
         }
+        .admin-capacity-fill { height: 100%; border-radius: 4px; }
+        /* Red when full, orange when nearly full, green when there is space */
+        .admin-capacity-fill.full { background: #dc3545; }
+        .admin-capacity-fill.warn { background: #f39c12; }
+        .admin-capacity-fill.ok   { background: #198754; }
 
-        .stat-card p {
-            font-size: 0.7rem;
+        /* Small badge showing how many slots are left on a bus */
+        .slots-badge {
+            font-size: 10px; font-weight: 800; text-transform: uppercase;
+            letter-spacing: 0.03em; padding: 2px 8px; border-radius: 20px; white-space: nowrap;
         }
+        .slots-full    { background: #fce4ec; color: #c62828; }
+        .slots-warn    { background: #fff8e1; color: #e65100; }
+        .slots-ok      { background: #e8f5e9; color: #1b5e20; }
 
-        .table-container {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            margin-top: 25px;
-            border: 1.2px solid #eee;
+        /* Compact route stop display inside fleet cards */
+        .route-stops-mini {
+            display: flex; align-items: center; flex-wrap: wrap; gap: 2px;
+            margin-top: 4px;
         }
+        .stop-mini-dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: #aaa; flex-shrink: 0;
+        }
+        .stop-mini-dot.first { background: #000; }
+        .stop-mini-dot.last  { background: #f39c12; }
+        .stop-mini-line { width: 10px; height: 1px; background: #ddd; }
+        .stop-mini-name { font-size: 10px; font-weight: 700; color: #888; white-space: nowrap; }
+        .stop-mini-name.first { color: #000; }
+        .stop-mini-name.last  { color: #f39c12; }
 
-        .table {
-            font-size: 0.8rem;
-        }
+        /* Makes cancelled rows appear crossed out and archived rows appear faded */
+        tr.row-cancelled td { color: #999; text-decoration: line-through; }
+        tr.row-archived  td { color: #bbb; font-style: italic; }
 
-        .btn-black {
-            background: #000;
-            color: white;
-            border-radius: 6px;
-            padding: 8px 16px;
-            border: none;
-            font-size: 0.8rem;
-        }
-
-        .badge {
-            font-size: 0.7rem;
-        }
-
-        .content-section {
-            display: none;
-        }
-
-        .content-section.active {
-            display: block;
-        }
-
-        #leafletMap {
-            height: 350px;
-            width: 100%;
-            border-radius: 12px;
-            z-index: 1;
-        }
-
-        .route-info-panel h5 {
-            font-size: 0.9rem;
-        }
-
-        /* FIX 3 & 4: Bus tag now gets color applied via JS */
-        .bus-tag {
-            padding: 3px 10px;
-            border-radius: 15px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            display: inline-block;
-            margin-right: 5px;
-            color: white;
-        }
-
-        .leaflet-routing-container {
-            display: none;
-        }
-
-        /* FIX 4: Legend panel styles */
-        .bus-legend {
-            margin-top: 20px;
-        }
-
-        .bus-legend-title {
-            font-size: 0.65rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: #999;
-            margin-bottom: 10px;
-        }
-
-        .legend-item-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 8px;
-            font-size: 0.78rem;
-            font-weight: 600;
-        }
-
-        .legend-color-dot {
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
-
-        /* FIX 3: Colored left border on fleet bus containers */
-        .bus-container-colored {
-            border-left-width: 4px !important;
-            border-left-style: solid !important;
-        }
+        /* Filter bar at the top of the reports section */
+        .report-filters { background: #f8f9fa; border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; border: 1px solid #eee; }
+        .report-filters label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #888; margin-bottom: 4px; }
     </style>
 </head>
 <body>
 
+<!-- Popup that asks the admin to confirm before signing out -->
+<div class="modal fade" id="signoutModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content signout-modal-content p-2">
+            <div class="modal-body text-center p-4">
+                <div style="font-size:3rem;color:#dc3545;margin-bottom:12px;"><i class="bi bi-box-arrow-right"></i></div>
+                <h5 class="fw-bold mb-2" style="letter-spacing:-0.02em;">Sign out?</h5>
+                <p class="text-muted small mb-4" style="font-size:13px;">Are you sure you want to sign out of the Admin Dashboard?</p>
+                <div class="d-grid gap-2">
+                    <a href="/signout" class="btn btn-danger fw-bold py-2" style="border-radius:10px;font-size:13px;text-transform:uppercase;letter-spacing:0.02em;">Sign Out</a>
+                    <button type="button" class="btn btn-light fw-bold py-2" data-bs-dismiss="modal" style="border-radius:10px;font-size:13px;text-transform:uppercase;letter-spacing:0.02em;">Stay</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="admin-wrapper">
+    <!-- Sidebar with navigation links and sign-out button -->
     <div class="sidebar">
         <h4>Ride Smart Admin</h4>
-        <a onclick="showSection('overview')" id="nav-overview" class="nav-link active">Dashboard</a>
-        <a onclick="showSection('fleet')" id="nav-fleet" class="nav-link">Fleet Management</a>
-        <a onclick="showSection('routes')" id="nav-routes" class="nav-link">Routes & Map</a>
-        <a onclick="showSection('reports')" id="nav-reports" class="nav-link">Booking Reports</a>
-        
+        <a onclick="showSection('overview')" id="nav-overview" class="nav-link active"><i class="bi bi-grid me-2"></i>Dashboard</a>
+        <a onclick="showSection('fleet')"    id="nav-fleet"    class="nav-link"><i class="bi bi-bus-front me-2"></i>Fleet Management</a>
+        <a onclick="showSection('routes')"   id="nav-routes"   class="nav-link"><i class="bi bi-map me-2"></i>Routes &amp; Map</a>
+        <a onclick="showSection('reports')"  id="nav-reports"  class="nav-link"><i class="bi bi-file-earmark-bar-graph me-2"></i>Booking Reports</a>
+        <!-- mt-auto pushes this button to the bottom of the sidebar -->
         <div class="mt-auto">
-            <a href="/signout" class="nav-link text-danger">Sign Out</a>
+            <button class="nav-link-signout" onclick="showSignoutModal()"><i class="bi bi-box-arrow-right me-2"></i>Sign Out</button>
         </div>
     </div>
 
     <div class="main-content">
+
+        <!-- ══ Dashboard Overview — the first tab ══ -->
         <div id="overview" class="content-section active">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h2 class="fw-bold">System Overview</h2>
+                <span class="text-muted" style="font-size:0.75rem;font-weight:600;">Ride Smart Admin</span>
             </div>
-
+            <!-- Top row of stat cards — key numbers at a glance -->
             <div class="row g-3">
                 <div class="col-md-3">
                     <div class="stat-card">
-                        <p class="text-muted small fw-bold text-uppercase mb-1">Active Buses</p>
+                        <p class="text-muted small fw-bold text-uppercase mb-1" style="font-size:0.65rem;">Active Buses</p>
                         <h3 class="fw-bold mb-0">{{ bus_count if bus_count else 0 }}</h3>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="stat-card">
-                        <p class="text-muted small fw-bold text-uppercase mb-1">Total Bookings</p>
+                        <p class="text-muted small fw-bold text-uppercase mb-1" style="font-size:0.65rem;">Total Bookings</p>
                         <h3 class="fw-bold mb-0">{{ booking_count if booking_count else 0 }}</h3>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="stat-card">
-                        <p class="text-muted small fw-bold text-uppercase mb-1">Registered Users</p>
+                        <p class="text-muted small fw-bold text-uppercase mb-1" style="font-size:0.65rem;">Registered Users</p>
                         <h3 class="fw-bold mb-0">{{ passenger_count if passenger_count else 0 }}</h3>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="stat-card">
-                        <p class="text-muted small fw-bold text-uppercase mb-1">Revenue (KES)</p>
-                        <h3 class="fw-bold mb-0">{% if total_revenue %}{{ "{:,.2f}".format(total_revenue) }}{% else %}0.00{% endif %}</h3>
+                        <p class="text-muted small fw-bold text-uppercase mb-1" style="font-size:0.65rem;">Revenue (KES)</p>
+                        <h3 class="fw-bold mb-0">{% if total_revenue %}{{ "{:,.0f}".format(total_revenue) }}{% else %}0{% endif %}</h3>
                     </div>
                 </div>
             </div>
 
+            <!-- Second row of stat cards — booking limits and full buses -->
+            <div class="row g-3 mt-1">
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <p class="text-muted small fw-bold text-uppercase mb-1" style="font-size:0.65rem;">Max Slots / Bus</p>
+                        <h3 class="fw-bold mb-0">{{ max_bookable }}</h3>
+                        <p class="text-muted mb-0" style="font-size:0.65rem;">Hard booking cap per trip</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <p class="text-muted small fw-bold text-uppercase mb-1" style="font-size:0.65rem;">Full Buses</p>
+                        <h3 class="fw-bold mb-0 text-danger">{{ all_buses | selectattr('is_full') | list | length }}</h3>
+                        <p class="text-muted mb-0" style="font-size:0.65rem;">Buses at max capacity</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table showing all registered passengers -->
             <div class="table-container">
                 <h6 class="fw-bold mb-3">Passenger Registrations</h6>
                 <table class="table align-middle">
                     <thead class="table-light">
-                        <tr>
-                            <th>User ID</th>
-                            <th>Name</th>
-                            <th>Phone</th>
-                            <th>Role</th>
-                            <th>Action</th>
-                        </tr>
+                        <tr><th>User ID</th><th>Name</th><th>Phone</th><th>Role</th><th>Action</th></tr>
                     </thead>
                     <tbody>
                         {% for user in passengers %}
@@ -256,7 +215,11 @@
                             <td>{{ user[1] }} {{ user[2] }}</td>
                             <td>{{ user[3] }}</td>
                             <td><span class="badge bg-dark">Passenger</span></td>
-                            <td><a href="/delete_user/{{ user[0] }}" class="btn btn-sm btn-outline-danger" style="font-size: 0.7rem;" onclick="return confirm('Remove user registration?')">Remove</a></td>
+                            <td>
+                                <!-- Remove button — marks the user as deleted but keeps their booking history -->
+                                <a href="/delete_user/{{ user[0] }}" class="btn btn-sm btn-outline-danger" style="font-size:0.7rem;"
+                                   onclick="return confirm('Remove user registration? Their booking history will be preserved.')">Remove</a>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -264,66 +227,122 @@
             </div>
         </div>
 
+        <!-- ══ Fleet Management — the second tab ══ -->
         <div id="fleet" class="content-section">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h2 class="fw-bold">Fleet Management</h2>
-                <button class="btn btn-black" data-bs-toggle="modal" data-bs-target="#addBusModal">+ Add New Bus</button>
+                <button class="btn btn-black" data-bs-toggle="modal" data-bs-target="#addBusModal">
+                    <i class="bi bi-plus me-1"></i>Add New Bus
+                </button>
             </div>
 
+            <!-- Loop through every bus and show a card with its details -->
             {% for bus in all_buses %}
-            <!-- FIX 3: data-bus-id used by JS to apply the matching color -->
             <div class="table-container mb-4 bus-container-colored" data-bus-id="{{ bus.busId }}">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div>
-                        <h6 class="fw-bold mb-0">Bus #{{ bus.busId }} ({{ bus.plateno }})</h6>
-                        <small class="text-muted" style="font-size: 0.7rem;">
-                            Capacity: {{ bus.totalcapacity }} seats
-                            {% if bus.startlocation and bus.destination %}
-                             &nbsp;|&nbsp; {{ bus.startlocation }} → {{ bus.destination }}
+                    <div style="flex:1;">
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <h6 class="fw-bold mb-0">Bus #{{ bus.busId }} ({{ bus.plateno }})</h6>
+                            <!-- Shows whether the bus is full, almost full, or has space -->
+                            {% if bus.is_full %}
+                            <span class="slots-badge slots-full"><i class="bi bi-x-circle me-1"></i>Full</span>
+                            {% elif bus.slots_left == 1 %}
+                            <span class="slots-badge slots-warn"><i class="bi bi-exclamation-circle me-1"></i>1 slot left</span>
+                            {% else %}
+                            <span class="slots-badge slots-ok"><i class="bi bi-check-circle me-1"></i>{{ bus.slots_left }} slots left</span>
                             {% endif %}
-                        </small>
+                        </div>
+                        <!-- Shows the bus capacity and fare -->
+                        <div style="font-size:0.7rem;color:#888;margin-top:4px;">
+                            Capacity: {{ bus.totalcapacity }} seats
+                            {% if bus.fare %}&nbsp;|&nbsp; KES {{ bus.fare }}{% endif %}
+                        </div>
+
+                        <!-- Visual bar showing how many of the 4 bookable slots are filled -->
+                        <div class="admin-capacity-bar" style="max-width:160px;">
+                            <div class="admin-capacity-fill {% if bus.is_full %}full{% elif bus.slots_left <= 1 %}warn{% else %}ok{% endif %}"
+                                 style="width:{{ [((bus.confirmed_count / max_bookable) * 100)|round|int, 100]|min }}%">
+                            </div>
+                        </div>
+
+                        <!-- Shows the full route with all intermediate stops -->
+                        {% if bus.route_stops %}
+                        <div class="route-stops-mini mt-2">
+                            {% for stop in bus.route_stops %}
+                                <span class="stop-mini-name {% if loop.first %}first{% elif loop.last %}last{% endif %}">{{ stop }}</span>
+                                {% if not loop.last %}
+                                <span class="stop-mini-line"></span>
+                                <span class="stop-mini-dot {% if loop.last %}last{% endif %}"></span>
+                                <span class="stop-mini-line"></span>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
                     </div>
+                    <!-- Action buttons for each bus -->
                     <div class="d-flex gap-2">
-                        <a href="/finish_trip/{{ bus.busId }}" class="btn btn-sm btn-success" style="font-size: 0.7rem;">Arrived</a>
-                        <a href="/delete_bus/{{ bus.busId }}" class="btn btn-sm btn-outline-danger" style="font-size: 0.7rem;" onclick="return confirm('Delete this bus?')">Delete</a>
+                        <a href="/finish_trip/{{ bus.busId }}" class="btn btn-sm btn-success" style="font-size:0.7rem;"><i class="bi bi-check me-1"></i>Arrived</a>
+                        <!-- Delete button — removes the bus but keeps its booking history -->
+                        <a href="/delete_bus/{{ bus.busId }}" class="btn btn-sm btn-outline-danger" style="font-size:0.7rem;"
+                           onclick="return confirm('Remove this bus from active fleet? Booking history will be preserved.')">Delete</a>
                     </div>
                 </div>
+                <!-- Passenger manifest — who is on this bus -->
                 <table class="table align-middle">
                     <thead class="table-light">
-                        <tr><th>Seat No</th><th>Passenger Name</th><th>Status</th><th>Action</th></tr>
+                        <tr>
+                            <th>Seat No</th>
+                            <th>Passenger</th>
+                            <th>Boarding</th>
+                            <th>Drop-off</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
                     </thead>
                     <tbody>
-                        {% set found = false %}
+                        {% set found = namespace(value=false) %}
                         {% for p in bus_passengers %}
                             {% if p.busId|int == bus.busId|int %}
                             <tr>
                                 <td><span class="fw-bold text-primary">{{ p.seatingno }}</span></td>
                                 <td>{{ p.fname }} {{ p.lname }}</td>
+                                <td style="font-size:0.75rem;">{{ p.boarding_stop if p.boarding_stop else '—' }}</td>
+                                <td style="font-size:0.75rem;">{{ p.dropoff_stop  if p.dropoff_stop  else '—' }}</td>
                                 <td><span class="badge bg-success">On Board</span></td>
                                 <td>
-                                    <a href="/delete_booking/{{ p.bookingId }}" class="btn btn-sm btn-link text-danger p-0" style="font-size: 0.7rem;" onclick="return confirm('Remove this passenger from the bus?')">Remove</a>
+                                    <!-- Remove button — cancels the booking but archives the record -->
+                                    <a href="/delete_booking/{{ p.bookingId }}" class="btn btn-sm btn-link text-danger p-0" style="font-size:0.7rem;"
+                                       onclick="return confirm('Cancel this passenger? Record will be archived.')">Remove</a>
                                 </td>
                             </tr>
-                            {% set found = true %}
+                            {% set found.value = true %}
                             {% endif %}
                         {% endfor %}
-                        {% if not found %}<tr><td colspan="4" class="text-center text-muted py-2">No active passengers</td></tr>{% endif %}
+                        <!-- If no passengers are on this bus, show a message -->
+                        {% if not found.value %}
+                        <tr><td colspan="6" class="text-center text-muted py-2">No active passengers</td></tr>
+                        {% endif %}
                     </tbody>
                 </table>
             </div>
             {% endfor %}
         </div>
 
+        <!-- ══ Routes & Map — the third tab ══ -->
         <div id="routes" class="content-section">
             <h2 class="fw-bold mb-4">Live Tracking</h2>
             <div class="row g-3">
-                <div class="col-lg-8"><div class="table-container"><div id="leafletMap"></div></div></div>
+                <!-- Map takes up the left two-thirds -->
+                <div class="col-lg-8">
+                    <div class="table-container"><div id="leafletMap"></div></div>
+                </div>
+                <!-- Route details panel on the right -->
                 <div class="col-lg-4">
                     <div class="table-container h-100">
                         <h6 class="fw-bold mb-3">Route Details</h6>
+                        <!-- Fleet tags — colored labels for each bus -->
                         <div class="route-info-panel mb-4">
-                            <p class="text-muted small fw-bold text-uppercase mb-2" style="font-size: 0.65rem;">Fleet</p>
-                            <!-- FIX 3: Bus tags in map panel get colors applied by JS -->
+                            <p class="text-muted small fw-bold text-uppercase mb-2" style="font-size:0.65rem;">Fleet</p>
                             <div class="d-flex flex-wrap gap-2" id="fleetTagsContainer">
                                 {% for bus in all_buses %}
                                 <span class="bus-tag" data-bus-id="{{ bus.busId }}">{{ bus.plateno }}</span>
@@ -331,14 +350,38 @@
                             </div>
                         </div>
 
-                        <!-- FIX 4: Bus color legend -->
+                        <!-- Shows the full route path for each bus -->
+                        <div class="mb-4">
+                            <p class="text-muted small fw-bold text-uppercase mb-2" style="font-size:0.65rem;">Full Route Paths</p>
+                            {% for bus in all_buses %}
+                            <div class="mb-3" style="padding:10px;background:#f8f9fa;border-radius:8px;border:1px solid #eee;">
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    <div class="legend-color-dot" data-bus-id="{{ bus.busId }}"></div>
+                                    <span style="font-size:0.75rem;font-weight:700;">{{ bus.plateno }}</span>
+                                    {% if bus.is_full %}<span class="slots-badge slots-full" style="font-size:9px;">Full</span>
+                                    {% else %}<span class="slots-badge slots-ok" style="font-size:9px;">{{ bus.slots_left }} left</span>{% endif %}
+                                </div>
+                                {% if bus.route_stops %}
+                                <div style="font-size:0.7rem;color:#666;font-weight:600;">
+                                    {{ bus.route_stops | join(' → ') }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Color legend matching the map markers -->
                         <div class="bus-legend">
                             <p class="bus-legend-title">Bus Color Key</p>
                             <div id="busLegendList">
                                 {% for bus in all_buses %}
                                 <div class="legend-item-row" data-bus-id="{{ bus.busId }}">
                                     <div class="legend-color-dot" data-bus-id="{{ bus.busId }}"></div>
-                                    <span>{{ bus.plateno }}{% if bus.startlocation and bus.destination %} — {{ bus.startlocation }} → {{ bus.destination }}{% endif %}</span>
+                                    <span>{{ bus.plateno }}
+                                        {% if bus.startlocation and bus.destination %}
+                                         — {{ bus.startlocation }} → {{ bus.destination }}
+                                        {% endif %}
+                                    </span>
                                 </div>
                                 {% endfor %}
                             </div>
@@ -348,37 +391,110 @@
             </div>
         </div>
 
+        <!-- ══ Booking Reports — the fourth tab ══ -->
         <div id="reports" class="content-section">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h2 class="fw-bold">Booking Reports</h2>
-                <button onclick="exportToExcel()" class="btn btn-success" style="font-size: 0.8rem;">Export Excel</button>
+                <button onclick="exportToExcel()" class="btn btn-success" style="font-size:0.8rem;">
+                    <i class="bi bi-file-earmark-excel me-1"></i>Export Excel
+                </button>
+            </div>
+
+            <!-- Filters that reload the page with query parameters -->
+            <div class="report-filters">
+                <form method="GET" action="#" onsubmit="applyServerFilters(event)" class="row g-2 align-items-end">
+                    <div class="col-auto">
+                        <label>Status</label>
+                        <select id="filterStatus" class="form-select form-select-sm" style="font-size:0.8rem;border-radius:7px;min-width:140px;">
+                            <option value="">All Statuses</option>
+                            <option value="Active"    {% if status_filter == 'Active'    %}selected{% endif %}>Active</option>
+                            <option value="Pending"   {% if status_filter == 'Pending'   %}selected{% endif %}>Pending</option>
+                            <option value="Paid"      {% if status_filter == 'Paid'      %}selected{% endif %}>Paid</option>
+                            <option value="Completed" {% if status_filter == 'Completed' %}selected{% endif %}>Completed</option>
+                            <option value="Cancelled" {% if status_filter == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                            <option value="Archived"  {% if status_filter == 'Archived'  %}selected{% endif %}>Archived</option>
+                        </select>
+                    </div>
+                    <div class="col-auto">
+                        <label>From</label>
+                        <input type="date" id="filterFrom" class="form-control form-control-sm" style="font-size:0.8rem;border-radius:7px;"
+                               value="{{ date_from if date_from else '' }}">
+                    </div>
+                    <div class="col-auto">
+                        <label>To</label>
+                        <input type="date" id="filterTo" class="form-control form-control-sm" style="font-size:0.8rem;border-radius:7px;"
+                               value="{{ date_to if date_to else '' }}">
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-black btn-sm" style="font-size:0.8rem;">Apply</button>
+                        <a href="#" onclick="clearFilters()" class="btn btn-outline-secondary btn-sm ms-1" style="font-size:0.8rem;">Clear</a>
+                    </div>
+                </form>
             </div>
 
             <div class="table-container">
+                <!-- Quick search box that filters the table as you type -->
                 <div class="mb-3">
-                    <input type="text" id="reportSearch" class="form-control w-25" placeholder="Filter table..." onkeyup="filterReports()" style="font-size: 0.8rem;">
+                    <input type="text" id="reportSearch" class="form-control w-25"
+                           placeholder="Filter table…" onkeyup="filterReports()"
+                           style="font-size:0.8rem;border-radius:8px;border:1.5px solid #eee;">
                 </div>
+                <!-- The main reports table — columns can be sorted by clicking the headers -->
                 <table class="table align-middle" id="reportsTable">
                     <thead class="table-light">
                         <tr>
-                            <th onclick="sortTable(0)" style="cursor:pointer">Date</th>
-                            <th onclick="sortTable(1)" style="cursor:pointer">Passenger</th>
+                            <th onclick="sortTable(0)" style="cursor:pointer;">Date <i class="bi bi-arrow-down-up" style="font-size:0.65rem;"></i></th>
+                            <th onclick="sortTable(1)" style="cursor:pointer;">Passenger <i class="bi bi-arrow-down-up" style="font-size:0.65rem;"></i></th>
                             <th>Seat</th>
                             <th>Bus ID</th>
-                            <th onclick="sortTable(4)" style="cursor:pointer">Amount</th>
+                            <th>Boarding</th>
+                            <th>Drop-off</th>
+                            <th onclick="sortTable(6)" style="cursor:pointer;">Status <i class="bi bi-arrow-down-up" style="font-size:0.65rem;"></i></th>
+                            <th onclick="sortTable(7)" style="cursor:pointer;">Amount <i class="bi bi-arrow-down-up" style="font-size:0.65rem;"></i></th>
                             <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for report in all_bookings %}
-                        <tr>
+                        <!-- Cancelled rows get a strikethrough, archived rows appear italic -->
+                        <tr class="{% if report.status == 'Cancelled' %}row-cancelled{% elif report.status == 'Archived' %}row-archived{% endif %}">
                             <td>{{ report.bookingdate if report.bookingdate else 'Recent' }}</td>
-                            <td>{{ report.fname }} {{ report.lname }}</td>
+                            <!-- Shows the passenger name, with an archived label if the user was deleted -->
+                            <td>
+                                {{ report.fname }} {{ report.lname }}
+                                {% if report.is_deleted %}
+                                <span class="text-muted" style="font-size:0.65rem;">(archived)</span>
+                                {% endif %}
+                            </td>
                             <td><span class="badge bg-dark">{{ report.seatingno }}</span></td>
                             <td>#{{ report.busId }}</td>
-                            <td class="fw-bold text-success">KES {{ "{:,.2f}".format(report.amount_paid) if report.amount_paid else '0.00' }}</td>
+                            <td style="font-size:0.75rem;">{{ report.boarding_stop if report.boarding_stop else '—' }}</td>
+                            <td style="font-size:0.75rem;">{{ report.dropoff_stop  if report.dropoff_stop  else '—' }}</td>
+                            <!-- Status badge — color changes based on the booking status -->
                             <td>
-                                <a href="/delete_booking/{{ report.bookingId }}" class="btn btn-sm btn-outline-danger" style="font-size: 0.7rem;" onclick="return confirm('Cancel this booking permanently?')">Cancel</a>
+                                <span class="badge
+                                    {% if report.status == 'Active'    %}bg-success
+                                    {% elif report.status == 'Pending'  %}bg-warning text-dark
+                                    {% elif report.status == 'Paid'     %}bg-info
+                                    {% elif report.status == 'Completed'%}bg-secondary
+                                    {% elif report.status == 'Cancelled'%}bg-danger
+                                    {% elif report.status == 'Archived' %}bg-dark
+                                    {% else %}bg-danger{% endif %}">
+                                    {{ report.status }}
+                                </span>
+                            </td>
+                            <!-- Amount — green for active, gray for cancelled or archived -->
+                            <td class="fw-bold {% if report.status not in ('Cancelled','Archived') %}text-success{% else %}text-muted{% endif %}">
+                                KES {{ "{:,.2f}".format(report.amount_paid) if report.amount_paid else '0.00' }}
+                            </td>
+                            <td>
+                                {% if report.status not in ('Cancelled', 'Archived') %}
+                                <!-- Cancel button — marks the booking as cancelled and archives it -->
+                                <a href="/delete_booking/{{ report.bookingId }}" class="btn btn-sm btn-outline-danger" style="font-size:0.7rem;"
+                                   onclick="return confirm('Cancel this booking? Record will be archived.')">Cancel</a>
+                                {% else %}
+                                <span class="text-muted" style="font-size:0.7rem;">—</span>
+                                {% endif %}
                             </td>
                         </tr>
                         {% endfor %}
@@ -389,10 +505,10 @@
     </div>
 </div>
 
-<!-- Add Bus Modal — with pickup/destination dropdowns -->
+<!-- Modal for adding a new bus to the fleet -->
 <div class="modal fade" id="addBusModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
+        <div class="modal-content border-0 shadow-lg" style="border-radius:15px;">
             <div class="modal-header border-0 pb-0">
                 <h5 class="fw-bold">Add New Bus to Fleet</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -435,6 +551,11 @@
                             <option value="51">51 Seater (Coach)</option>
                         </select>
                     </div>
+                    <!-- Reminder that only 4 seats can be booked regardless of physical capacity -->
+                    <div class="alert alert-info py-2 mb-3" style="font-size:0.75rem;border-radius:8px;">
+                        <i class="bi bi-info-circle me-1"></i>
+                        <strong>Note:</strong> Only <strong>{{ max_bookable }} booking slots</strong> are available per bus trip regardless of seat capacity.
+                    </div>
                     <button type="submit" class="btn btn-black w-100 py-2">Add Bus</button>
                 </form>
             </div>
@@ -443,112 +564,158 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
 <script>
-    // FIX 3 & 4: Fixed color palette — each bus gets a distinct color by its index
-    const BUS_COLORS = ['#e74c3c', '#2980b9', '#27ae60', '#8e44ad', '#e67e22', '#16a085', '#c0392b', '#2471a3'];
-
-    function getBusColor(busId) {
-        // Use busId modulo palette length so colors are stable and consistent
-        return BUS_COLORS[(busId - 1) % BUS_COLORS.length];
+    // Opens the sign-out confirmation popup
+    function showSignoutModal() {
+        new bootstrap.Modal(document.getElementById('signoutModal')).show();
     }
 
-    // Apply colors to all bus-tagged elements on page load
+    // Each bus gets a color from this palette based on its ID
+    const BUS_COLORS = ['#e74c3c','#2980b9','#27ae60','#8e44ad','#e67e22','#16a085','#c0392b','#2471a3'];
+    function getBusColor(busId) { return BUS_COLORS[(busId - 1) % BUS_COLORS.length]; }
+
+    // Applies the bus color to the card border, fleet tags, and legend dots
     function applyBusColors() {
-        // Fleet management: colored left border on each bus container
         document.querySelectorAll('.bus-container-colored[data-bus-id]').forEach(el => {
-            const busId = parseInt(el.getAttribute('data-bus-id'));
-            el.style.borderLeftColor = getBusColor(busId);
+            el.style.borderLeftColor = getBusColor(parseInt(el.getAttribute('data-bus-id')));
         });
-
-        // Routes panel: fleet tags
         document.querySelectorAll('.bus-tag[data-bus-id]').forEach(el => {
-            const busId = parseInt(el.getAttribute('data-bus-id'));
-            el.style.backgroundColor = getBusColor(busId);
+            el.style.backgroundColor = getBusColor(parseInt(el.getAttribute('data-bus-id')));
         });
-
-        // Legend dots
         document.querySelectorAll('.legend-color-dot[data-bus-id]').forEach(el => {
-            const busId = parseInt(el.getAttribute('data-bus-id'));
-            el.style.backgroundColor = getBusColor(busId);
+            el.style.backgroundColor = getBusColor(parseInt(el.getAttribute('data-bus-id')));
         });
     }
-
-    // Run on page load
     applyBusColors();
 
-    let map;
-    let mapInitialized = false;
+    let map, mapInitialized = false;
 
+    // Switches between the four dashboard tabs
     function showSection(id) {
         document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
         document.getElementById(id).classList.add('active');
         document.getElementById('nav-' + id).classList.add('active');
+        // Only load the map when the Routes tab is opened for the first time
         if (id === 'routes') initMap();
     }
 
+    // Sets up the Leaflet map with markers for each bus
     function initMap() {
+        // Only initialize once
         if (mapInitialized) return;
         map = L.map('leafletMap').setView([-1.294, 36.812], 14);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-        // FIX 3: Add colored markers for each bus using their busId color
+        // Bus data injected from Flask
         const busData = [
             {% for bus in all_buses %}
-            { id: {{ bus.busId }}, plate: "{{ bus.plateno }}" },
+            {
+                id: {{ bus.busId }},
+                plate: "{{ bus.plateno }}",
+                start: "{{ bus.startlocation }}",
+                dest:  "{{ bus.destination }}",
+                stops: {{ bus.route_stops | tojson }},
+                isFull: {{ 'true' if bus.is_full else 'false' }},
+                slotsLeft: {{ bus.slots_left }}
+            },
             {% endfor %}
         ];
 
+        // Place a colored marker for each bus, slightly offset so they don't overlap
         busData.forEach(function(bus) {
             const color = getBusColor(bus.id);
-            const markerHtml = `<div style="background:${color};width:14px;height:14px;border-radius:50%;border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.4);"></div>`;
-            const icon = L.divIcon({ html: markerHtml, className: '', iconSize: [14, 14] });
-            // Slight offset per bus so markers don't stack exactly
+            const icon  = L.divIcon({
+                html: `<div style="background:${color};width:14px;height:14px;border-radius:50%;border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.4);"></div>`,
+                className: '', iconSize: [14, 14],
+            });
             const lat = -1.294 + (bus.id * 0.003);
             const lng = 36.812 + (bus.id * 0.003);
-            L.marker([lat, lng], { icon: icon })
+
+            const routeText = bus.stops.length > 0 ? bus.stops.join(' → ') : bus.start + ' → ' + bus.dest;
+            const slotText  = bus.isFull
+                ? '<span style="color:#dc3545;font-weight:700;">FULL</span>'
+                : `<span style="color:#198754;font-weight:700;">${bus.slotsLeft} slots left</span>`;
+
+            // Clicking a marker shows a popup with bus details
+            L.marker([lat, lng], { icon })
              .addTo(map)
-             .bindPopup(`<strong>${bus.plate}</strong>`);
+             .bindPopup(`
+                <strong>${bus.plate}</strong><br>
+                <small style="color:#666;">${routeText}</small><br>
+                <small>${slotText}</small>
+             `);
         });
 
         mapInitialized = true;
     }
 
+    // ── Report helpers ─────────────────────────────────────────────────────
+
+    // Downloads the reports table as an Excel file
     function exportToExcel() {
-        const table = document.getElementById("reportsTable");
-        const wb = XLSX.utils.table_to_book(table, { sheet: "Reports" });
-        XLSX.writeFile(wb, "Reports.xlsx");
+        const table = document.getElementById('reportsTable');
+        const wb    = XLSX.utils.table_to_book(table, { sheet: 'Reports' });
+        XLSX.writeFile(wb, 'RideSmart-Reports.xlsx');
     }
 
+    // Filters the table rows as the admin types in the search box
     function filterReports() {
-        let input = document.getElementById("reportSearch").value.toUpperCase();
-        let rows = document.getElementById("reportsTable").getElementsByTagName("tr");
+        const input = document.getElementById('reportSearch').value.toUpperCase();
+        const rows  = document.getElementById('reportsTable').getElementsByTagName('tr');
         for (let i = 1; i < rows.length; i++) {
-            rows[i].style.display = rows[i].innerText.toUpperCase().includes(input) ? "" : "none";
+            rows[i].style.display = rows[i].innerText.toUpperCase().includes(input) ? '' : 'none';
         }
     }
 
+    // Applies the status and date filters by reloading the page with query parameters
+    function applyServerFilters(e) {
+        e.preventDefault();
+        const status = document.getElementById('filterStatus').value;
+        const from   = document.getElementById('filterFrom').value;
+        const to     = document.getElementById('filterTo').value;
+        const params = new URLSearchParams();
+        if (status) params.set('status_filter', status);
+        if (from)   params.set('date_from',     from);
+        if (to)     params.set('date_to',        to);
+        // Reload and stay on the reports tab
+        window.location.href = '/admin_dashboard?' + params.toString() + '#reports-anchor';
+        sessionStorage.setItem('activeSection', 'reports');
+    }
+
+    // Clears all filters and reloads
+    function clearFilters() {
+        sessionStorage.setItem('activeSection', 'reports');
+        window.location.href = '/admin_dashboard';
+    }
+
+    // After a filter reload, reopen the reports tab automatically
+    (function restoreSection() {
+        const saved = sessionStorage.getItem('activeSection');
+        if (saved) {
+            sessionStorage.removeItem('activeSection');
+            showSection(saved);
+        }
+    })();
+
+    // Sorts the reports table when a column header is clicked
     function sortTable(n) {
-        let table = document.getElementById("reportsTable");
-        let switching = true, i, x, y, shouldSwitch, dir = "asc", switchcount = 0;
+        let table = document.getElementById('reportsTable');
+        let switching = true, i, x, y, shouldSwitch, dir = 'asc', switchcount = 0;
         while (switching) {
             switching = false;
-            let rows = table.rows;
-            for (i = 1; i < (rows.length - 1); i++) {
+            const rows = table.rows;
+            for (i = 1; i < rows.length - 1; i++) {
                 shouldSwitch = false;
-                x = rows[i].getElementsByTagName("TD")[n];
-                y = rows[i + 1].getElementsByTagName("TD")[n];
-                if (dir == "asc" && x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) { shouldSwitch = true; break; }
-                if (dir == "desc" && x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) { shouldSwitch = true; break; }
+                x = rows[i].getElementsByTagName('TD')[n];
+                y = rows[i+1].getElementsByTagName('TD')[n];
+                if (dir === 'asc'  && x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) { shouldSwitch = true; break; }
+                if (dir === 'desc' && x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) { shouldSwitch = true; break; }
             }
-            if (shouldSwitch) {
-                rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
-                switching = true; switchcount++;
-            } else if (switchcount == 0 && dir == "asc") { dir = "desc"; switching = true; }
+            if (shouldSwitch) { rows[i].parentNode.insertBefore(rows[i+1], rows[i]); switching = true; switchcount++; }
+            else if (switchcount === 0 && dir === 'asc') { dir = 'desc'; switching = true; }
         }
     }
 </script>
-
 </body>
 </html>
