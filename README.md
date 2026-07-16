@@ -34,4 +34,22 @@ The system uses four main tables:
 - Route
 - Bus
 - Booking
+## Screenshots
+
+### Landing Page
+
+![Landing Page](screenshots/landing-page.png)
+
+### Admin Dashboard
+
+![Dashboard](screenshots/dashboard.png)
+
+### main page
+
+![Dashboard](screenshots/mainpage.png)
+
+
+### loginpage
+
+![Dashboard](screenshots/loginpage.png)
 
